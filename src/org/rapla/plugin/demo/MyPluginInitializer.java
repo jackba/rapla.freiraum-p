@@ -16,18 +16,14 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 
-import org.rapla.components.iolayer.FileContent;
 import org.rapla.components.iolayer.IOInterface;
 import org.rapla.entities.domain.Reservation;
 import org.rapla.entities.dynamictype.Attribute;
 import org.rapla.entities.dynamictype.Classification;
-import org.rapla.examples.RaplaImportUsers;
 import org.rapla.framework.RaplaContext;
 import org.rapla.framework.RaplaException;
 import org.rapla.gui.CalendarModel;
@@ -45,9 +41,6 @@ public class MyPluginInitializer extends RaplaGUIComponent
         MenuExtensionPoint helpMenu = (MenuExtensionPoint) getService( RaplaExtensionPoints.HELP_MENU_EXTENSION_POINT);
         helpMenu.insert(createInfoMenu() );
         
-        MenuExtensionPoint importMenu = (MenuExtensionPoint) getService( RaplaExtensionPoints.IMPORT_MENU_EXTENSION_POINT);
-        importMenu.insert( createImportMenu());
-
         MenuExtensionPoint export = (MenuExtensionPoint) getService( RaplaExtensionPoints.EXPORT_MENU_EXTENSION_POINT);
         export.insert(createExportMenu() );
     }
@@ -63,27 +56,6 @@ public class MyPluginInitializer extends RaplaGUIComponent
                         dialog.setTitle( "My Usecase");
                         dialog.setSize( 800, 600);
                         dialog.startNoPack();
-                     } catch (Exception ex) {
-                        showException( ex, getMainComponent() );
-                    }
-                }
-        });
-        return item;
-    }
-
-    private JMenuItem createImportMenu( ) {
-        JMenuItem item = new JMenuItem( "Users from CSV" );
-        item.setIcon( getIcon("icon.import") );
-        item.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    try {
-                        final Frame frame = (Frame) SwingUtilities.getRoot(getMainComponent());
-                        IOInterface io = (IOInterface) getService( IOInterface.class);
-                        FileContent file = io.openFile( frame, null, new String[] {".csv"});
-                        if ( file != null) {
-                            Reader reader = new InputStreamReader( file.getInputStream());
-                            RaplaImportUsers.importUsers( getClientFacade(), reader);
-                        }
                      } catch (Exception ex) {
                         showException( ex, getMainComponent() );
                     }
