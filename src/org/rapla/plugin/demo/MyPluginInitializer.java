@@ -11,7 +11,6 @@
  | Definition as published by the Open Source Initiative (OSI).             |
  *--------------------------------------------------------------------------*/
 package org.rapla.plugin.demo;
-import java.awt.Component;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,18 +29,19 @@ import org.rapla.framework.RaplaException;
 import org.rapla.gui.MenuExtensionPoint;
 import org.rapla.gui.RaplaGUIComponent;
 import org.rapla.gui.toolkit.DialogUI;
+import org.rapla.plugin.ClientExtension;
 import org.rapla.plugin.RaplaExtensionPoints;
 
 
-public class MyPluginInitializer extends RaplaGUIComponent
+public class MyPluginInitializer extends RaplaGUIComponent implements ClientExtension
 {
 
-    public MyPluginInitializer(RaplaContext sm) throws RaplaException {
+    public MyPluginInitializer(RaplaContext sm)  {
         super(sm);
-        MenuExtensionPoint helpMenu = (MenuExtensionPoint) getService( RaplaExtensionPoints.HELP_MENU_EXTENSION_POINT);
+        MenuExtensionPoint helpMenu = getService( RaplaExtensionPoints.HELP_MENU_EXTENSION_POINT);
         helpMenu.insert(createInfoMenu() );
         
-        MenuExtensionPoint export = (MenuExtensionPoint) getService( RaplaExtensionPoints.EXPORT_MENU_EXTENSION_POINT);
+        MenuExtensionPoint export =  getService( RaplaExtensionPoints.EXPORT_MENU_EXTENSION_POINT);
         export.insert(createExportMenu() );
     }
 
@@ -71,7 +71,7 @@ public class MyPluginInitializer extends RaplaGUIComponent
                 public void actionPerformed(ActionEvent evt) {
                     try {
                         CalendarModel model = getService(CalendarModel.class);
-                        export( model, getMainComponent());
+                        export( model);
                     } catch (Exception ex) {
                         showException( ex, getMainComponent() );
                     }
@@ -81,7 +81,7 @@ public class MyPluginInitializer extends RaplaGUIComponent
     }
     
     
-    public void export(final CalendarModel model,final Component parentComponent) throws Exception
+    public void export(final CalendarModel model) throws Exception
     {
         final Reservation[] events = model.getReservations();
         // generates a text file from all filtered events;
@@ -113,7 +113,7 @@ public class MyPluginInitializer extends RaplaGUIComponent
 
     public void saveFile(byte[] content,String filename, String extension) throws RaplaException {
         final Frame frame = (Frame) SwingUtilities.getRoot(getMainComponent());
-        IOInterface io = (IOInterface) getService( IOInterface.class);
+        IOInterface io = getService( IOInterface.class);
         try {
             io.saveFile( frame, null, new String[] {extension}, filename, content);
         } catch (IOException e) {
