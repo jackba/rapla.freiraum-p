@@ -16,6 +16,7 @@ import org.rapla.components.xmlbundle.impl.I18nBundleImpl;
 import org.rapla.framework.Configuration;
 import org.rapla.framework.Container;
 import org.rapla.framework.PluginDescriptor;
+import org.rapla.framework.TypedComponentRole;
 import org.rapla.plugin.RaplaExtensionPoints;
 
 /**
@@ -27,7 +28,7 @@ public class MyPlugin
     implements
     PluginDescriptor
 {
-	public static final String RESOURCE_FILE = MyPlugin.class.getPackage().getName() + ".MyPluginResources";
+	public static final TypedComponentRole<I18nBundle> RESOURCE_FILE = new TypedComponentRole<I18nBundle>(MyPlugin.class.getPackage().getName() + ".MyPluginResources");
     public static final String PLUGIN_CLASS = MyPlugin.class.getName();
 
     public String toString() {
@@ -41,7 +42,7 @@ public class MyPlugin
         if ( !config.getAttributeAsBoolean("enabled", false) )
         	return;
 
-        container.addContainerProvidedComponent( I18nBundle.class, I18nBundleImpl.class, RESOURCE_FILE,I18nBundleImpl.createConfig( RESOURCE_FILE ) );
+        container.addContainerProvidedComponent( RESOURCE_FILE, I18nBundleImpl.class,I18nBundleImpl.createConfig( RESOURCE_FILE.getId() ) );
         container.addContainerProvidedComponent( RaplaExtensionPoints.CLIENT_EXTENSION, MyPluginInitializer.class);
         container.addContainerProvidedComponent( RaplaExtensionPoints.USER_OPTION_PANEL_EXTENSION, MyOption.class);
 
