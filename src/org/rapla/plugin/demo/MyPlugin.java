@@ -11,13 +11,13 @@
  | Definition as published by the Open Source Initiative (OSI).             |
  *--------------------------------------------------------------------------*/
 package org.rapla.plugin.demo;
+import org.rapla.client.ClientServiceContainer;
 import org.rapla.components.xmlbundle.I18nBundle;
 import org.rapla.components.xmlbundle.impl.I18nBundleImpl;
 import org.rapla.framework.Configuration;
-import org.rapla.framework.Container;
 import org.rapla.framework.PluginDescriptor;
 import org.rapla.framework.TypedComponentRole;
-import org.rapla.plugin.RaplaExtensionPoints;
+import org.rapla.plugin.RaplaClientExtensionPoints;
 
 /**
    This is a demonstration of a rapla-plugin. It adds a sample usecase and option
@@ -26,7 +26,7 @@ import org.rapla.plugin.RaplaExtensionPoints;
 
 public class MyPlugin
     implements
-    PluginDescriptor
+    PluginDescriptor<ClientServiceContainer>
 {
 	public static final TypedComponentRole<I18nBundle> RESOURCE_FILE = new TypedComponentRole<I18nBundle>(MyPlugin.class.getPackage().getName() + ".MyPluginResources");
     public static final String PLUGIN_CLASS = MyPlugin.class.getName();
@@ -38,20 +38,13 @@ public class MyPlugin
     /**
      * @see org.rapla.framework.PluginDescriptor#provideServices(org.rapla.framework.general.Container)
      */
-    public void provideServices(Container container, Configuration config) {
+    public void provideServices(ClientServiceContainer container, Configuration config) {
         if ( !config.getAttributeAsBoolean("enabled", false) )
         	return;
 
         container.addContainerProvidedComponent( RESOURCE_FILE, I18nBundleImpl.class,I18nBundleImpl.createConfig( RESOURCE_FILE.getId() ) );
-        container.addContainerProvidedComponent( RaplaExtensionPoints.CLIENT_EXTENSION, MyPluginInitializer.class);
-        container.addContainerProvidedComponent( RaplaExtensionPoints.USER_OPTION_PANEL_EXTENSION, MyOption.class);
-
-        
-    }
-
-    public Object getPluginMetaInfos( String key )
-    {
-        return null;
+        container.addContainerProvidedComponent( RaplaClientExtensionPoints.CLIENT_EXTENSION, MyPluginInitializer.class);
+        container.addContainerProvidedComponent( RaplaClientExtensionPoints.USER_OPTION_PANEL_EXTENSION, MyOption.class);
     }
 
 }

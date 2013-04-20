@@ -30,7 +30,7 @@ import org.rapla.gui.MenuExtensionPoint;
 import org.rapla.gui.RaplaGUIComponent;
 import org.rapla.gui.toolkit.DialogUI;
 import org.rapla.plugin.ClientExtension;
-import org.rapla.plugin.RaplaExtensionPoints;
+import org.rapla.plugin.RaplaClientExtensionPoints;
 
 
 public class MyPluginInitializer extends RaplaGUIComponent implements ClientExtension
@@ -38,10 +38,10 @@ public class MyPluginInitializer extends RaplaGUIComponent implements ClientExte
 
     public MyPluginInitializer(RaplaContext sm)  {
         super(sm);
-        MenuExtensionPoint helpMenu = getService( RaplaExtensionPoints.HELP_MENU_EXTENSION_POINT);
+        MenuExtensionPoint helpMenu = getService( RaplaClientExtensionPoints.HELP_MENU_EXTENSION_POINT);
         helpMenu.insert(createInfoMenu() );
         
-        MenuExtensionPoint export =  getService( RaplaExtensionPoints.EXPORT_MENU_EXTENSION_POINT);
+        MenuExtensionPoint export =  getService( RaplaClientExtensionPoints.EXPORT_MENU_EXTENSION_POINT);
         export.insert(createExportMenu() );
     }
 
