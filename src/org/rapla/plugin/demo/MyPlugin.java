@@ -28,6 +28,8 @@ public class MyPlugin
     implements
     PluginDescriptor<ClientServiceContainer>
 {
+	
+	public static final boolean ENABLE_BY_DEFAULT = false;
 	public static final TypedComponentRole<I18nBundle> RESOURCE_FILE = new TypedComponentRole<I18nBundle>(MyPlugin.class.getPackage().getName() + ".MyPluginResources");
     public static final String PLUGIN_CLASS = MyPlugin.class.getName();
 
@@ -39,7 +41,7 @@ public class MyPlugin
      * @see org.rapla.framework.PluginDescriptor#provideServices(org.rapla.framework.general.Container)
      */
     public void provideServices(ClientServiceContainer container, Configuration config) {
-        if ( !config.getAttributeAsBoolean("enabled", false) )
+        if ( !config.getAttributeAsBoolean("enabled", ENABLE_BY_DEFAULT) )
         	return;
 
         container.addContainerProvidedComponent( RESOURCE_FILE, I18nBundleImpl.class,I18nBundleImpl.createConfig( RESOURCE_FILE.getId() ) );
