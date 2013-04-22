@@ -26,60 +26,38 @@ import org.rapla.entities.dynamictype.Classification;
 import org.rapla.facade.CalendarModel;
 import org.rapla.framework.RaplaContext;
 import org.rapla.framework.RaplaException;
-import org.rapla.gui.MenuExtensionPoint;
 import org.rapla.gui.RaplaGUIComponent;
-import org.rapla.gui.toolkit.DialogUI;
-import org.rapla.plugin.ClientExtension;
-import org.rapla.plugin.RaplaClientExtensionPoints;
+import org.rapla.gui.toolkit.IdentifiableMenuEntry;
 
 
-public class MyPluginInitializer extends RaplaGUIComponent implements ClientExtension
+public class MyExportMenuExtension extends RaplaGUIComponent implements IdentifiableMenuEntry,ActionListener
 {
+	String id = "dummy export";
+	private JMenuItem item;
 
-    public MyPluginInitializer(RaplaContext sm)  {
+    public MyExportMenuExtension(RaplaContext sm)  {
         super(sm);
-        MenuExtensionPoint helpMenu = getService( RaplaClientExtensionPoints.HELP_MENU_EXTENSION_POINT);
-        helpMenu.insert(createInfoMenu() );
-        
-        MenuExtensionPoint export =  getService( RaplaClientExtensionPoints.EXPORT_MENU_EXTENSION_POINT);
-        export.insert(createExportMenu() );
-    }
-
-    private JMenuItem createInfoMenu( ) {
-        JMenuItem item = new JMenuItem( "my UseCase" );
-        item.setIcon( getIcon("icon.help") );
-        item.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    try {
-                        final MyDialog myDialog = new MyDialog(getContext());
-                        DialogUI dialog = DialogUI.create( getContext(),getMainComponent(),true, myDialog.getComponent(), new String[] {getString("ok")});
-                        dialog.setTitle( "My Usecase");
-                        dialog.setSize( 800, 600);
-                        dialog.startNoPack();
-                     } catch (Exception ex) {
-                        showException( ex, getMainComponent() );
-                    }
-                }
-        });
-        return item;
-    }
-
-    private JMenuItem createExportMenu( )  {
-        JMenuItem item = new JMenuItem( "dummy export" );
+		item = new JMenuItem( id );
         item.setIcon( getIcon("icon.export") );
-        item.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    try {
-                        CalendarModel model = getService(CalendarModel.class);
-                        export( model);
-                    } catch (Exception ex) {
-                        showException( ex, getMainComponent() );
-                    }
-                }
-        });
-        return item;
+        item.addActionListener(this);
     }
     
+    public String getId() {
+		return id;
+	}
+
+	public JMenuItem getMenuElement() {
+		return item;
+	}
+	
+	 public void actionPerformed(ActionEvent evt) {
+         try {
+             CalendarModel model = getService(CalendarModel.class);
+             export( model);
+         } catch (Exception ex) {
+             showException( ex, getMainComponent() );
+         }
+	 }
     
     public void export(final CalendarModel model) throws Exception
     {
