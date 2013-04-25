@@ -18,12 +18,13 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 
 import org.rapla.entities.configuration.Preferences;
+import org.rapla.framework.TypedComponentRole;
 import org.rapla.gui.OptionPanel;
 
 /** sample Option that only displays a JCheckBox */
 public class MyOption implements OptionPanel {
     Preferences preferences;
-    String MY_OPTION = "org.rapla.plugin.demo.MyOption";
+    TypedComponentRole<Boolean> MY_OPTION = new TypedComponentRole<Boolean>("org.rapla.plugin.demo.MyOption");
     JCheckBox checkBox = new JCheckBox("check or uncheck");
     public MyOption() {
     }
@@ -39,7 +40,7 @@ public class MyOption implements OptionPanel {
     }
 
     public void commit() {
-        preferences.putEntry(MY_OPTION, String.valueOf( checkBox.isSelected()));
+        preferences.putEntry(MY_OPTION, checkBox.isSelected());
     }
 
     public void setPreferences(Preferences preferences) {
