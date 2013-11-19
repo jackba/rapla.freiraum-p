@@ -1,0 +1,7 @@
+R404 CIM-Labor
+R404 Fraesmaschine
+R404 Roboter
+R404 Drehmaschine
+C1
+C2
+C2 - StuV

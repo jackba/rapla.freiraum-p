@@ -1,0 +1,319 @@
+﻿<?php
+/*--------------------------------------------------------------------------*
+ | Copyright (c) 2013 Fabian Luft, Martin Wilhelm			    			|
+ |                                                                          |
+ | This program is free software; you can redistribute it and/or modify     |
+ | it under the terms of the GNU General Public License as published by the |
+ | Free Software Foundation. A copy of the license has been included with   |
+ | these distribution in the COPYING file, if not go to www.fsf.org         |
+ |                                                                          |
+ | As a special exception, you are granted the permissions to link this     |
+ | program with every library, which license fulfills the Open Source       |
+ | Definition as published by the Open Source Initiative (OSI).             |
+ *--------------------------------------------------------------------------*/
+?>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>freiraum</title>
+		<meta charset="utf-8">
+		<meta name="application-name" content="freiraum"/>
+		<meta name="msapplication-TileImage" content="css/images/png/freiraumLogoTransparentMS.png"/>
+		<meta name="viewport" content="width=device-width, maximum-scale=1.0, initial-scale=1.0, user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<link rel="apple-touch-icon" sizes="57x57" href="css/images/png/freiraumLogoIOS57.png" />
+		<link rel="apple-touch-icon" sizes="72x72" href="css/images/png/freiraumLogoIOS72.png" />
+		<link rel="apple-touch-icon" sizes="114x114" href="css/images/png/freiraumLogoIOS114.png" />
+		<link rel="apple-touch-icon-precomposed" href="css/images/png/freiraumLogoIOS114.png"/>
+		<link rel="stylesheet" href="css/freiraum.min.css" />
+		<link rel="stylesheet" href="css/jqm-structure.css" />
+		<link rel="stylesheet" href="css/mobile.css" />
+		<link rel="stylesheet" href="css/jqm-customize.css" />
+		<script src="js/library/jQuery/jquery.js"></script>
+		<script src="js/library/jQuery/configuration.js"></script>
+		<script src="js/library/jQuery/jqm.js"></script>
+		<script src="js/library/modernizr.js"></script>
+		<script src="js/constants.js"></script>
+		<script src="js/exception.js"></script>
+		<script src="js/identificationService.js"></script>
+		<script src="js/mainController.js"></script>
+		<script src="js/screenController/screenControlHelper.js"></script>
+		<script src="js/model/ajaxRequest.js"></script>
+		<script src="js/model/pushService.js"></script>
+		<script src="js/screenController/homeScreenController.js"></script>
+		<script src="js/screenController/elementsListScreenController.js"></script>
+		<script src="js/screenController/findRoomScreenController.js"></script>
+		<script src="js/screenController/timetableScreenController.js"></script>
+		<script src="js/screenController/calendarScreenController.js"></script>
+		<script src="js/screenController/findRoomResultScreenController.js"></script>
+	</head>
+	<body>
+		<div data-role="page" id="homeScreen">
+			<div class="header" data-role="header" data-theme="a">
+				<h1 style="font-size: 1.5em; font-weight: normal; margin: 0.5em 15%;">freiraum</h1>
+			</div>
+			<div class="contentArea" data-role="content" data-theme="a" style="background-color: #1d1d1d;">
+				<div id="privateBrowsingError" style="display: none;">
+					<div style="margin: auto 0;">
+						Es scheint als hätten Sie Private Browsing aktiviert. Bitte deaktivieren Sie Private Browsing.
+					</div>
+				</div>
+				<div class="homeButtonGroup">
+					<a id="configStudent" data-role="button" href="" data-transition="fade" style="background: #4b0c39;">
+					<div class="imageWrapper">
+						<div id="studentImage" class="image"></div>
+						<span class="homeButtonInfo">Student<span class="homeButtonDetailInfo"> - Kurs wählen</span></span>
+					</div> </a>
+
+					<?php
+					require (realpath("./php/constants.php"));
+					if (MENUE_PROFESSOR_VISIBLE == "true") {
+						echo "
+<a id='configProf' data-role='button' href='' data-transition='fade' style='background: #0c7271;'>
+<div class='imageWrapper'>
+<div id='profImage' class='image'></div>
+<span class='homeButtonInfo'>Dozent<span class='homeButtonDetailInfo'> - Dozent wählen</span></span>
+</div> </a>";
+					}
+
+					/**
+					 * If the .ini file is configured that the room screens (room and roomfree) are displayed
+					 * in one row beneath each other, the boolean value MENUE_ROOMROW_SINGLE is set to false
+					 */
+					if (MENUE_ROOMROW_SINGLE == "false") {
+						echo "<div class='ui-grid-a'>
+<div class='ui-block-a'>
+<a id='configRoom' class='gridItems' data-role='button' href='' data-transition='fade' style='background: #6a1919;'>
+<div class='imageWrapper'>
+<div id='roomImage' class='image'></div>
+<span class='homeButtonInfo'>Raum<span class='homeButtonDetailInfo'> - Raum wählen</span></span>
+</div> </a>
+</div>
+<div class='ui-block-b'>
+<a id='findRoom' class='gridItems' data-role='button' href='' data-transition='fade' style='background: #607e22;'>
+<div class='imageWrapper'>
+<div id='findRoomImage' class='image'></div>
+<span class='homeButtonInfo'>Raum finden<span class='homeButtonDetailInfo'> - Freie Räume suchen</span></span>
+</div> </a>
+</div>
+</div>";
+					} else {
+						echo " <a id='configRoom' data-role='button' href='' data-transition='fade' style='background: #6a1919;'>
+<div class='imageWrapper'>
+<div id='roomImage' class='image'></div>
+<span class='homeButtonInfo'>Raum<span class='homeButtonDetailInfo'> - Raum wählen</span></span>
+</div> </a>
+<a id='findRoom' data-role='button' href='' data-transition='fade' style='background: #607e22;'>
+<div class='imageWrapper'>
+<div id='findRoomImage' class='image'></div>
+<span class='homeButtonInfo'>Raum finden<span class='homeButtonDetailInfo'> - Freie Räume suchen</span></span>
+</div> </a>";
+					}
+
+					if (MENUE_BUG_VISIBLE == "true") {
+						echo "<a data-role='button' href='' data-transition='fade' style='background: #1C407A;'>
+<div class='imageWrapper'>
+<div id='bugImage' class='image'></div>
+<span class='homeButtonInfo'>Bug gefunden?<span class='homeButtonDetailInfo'> - Bug melden</span></span>
+</div> </a>";
+					}
+					?>
+				</div>
+			</div>
+			<div class="footer" data-role="footer" data-theme="a" style="text-align: right; font-weight: normal;">
+				v.1.6
+			</div>
+		</div>
+
+		<div data-role="page" id="configStudentScreen" data-theme="e">
+			<div class="header" data-role="header" data-theme="e">
+				<h1>Kurswahl</h1>
+				<a href="" class="home" data-role="button" data-icon="custom-home" data-iconpos="notext"></a>
+			</div>
+			<div class="contentArea" data-role="content" data-theme="e">
+				<div id="listviewCourses" style="display: block;">
+					<ul class="elementsListview" id="listviewCoursesList" data-inset="true" data-filter="true" data-role="listview" data-theme="e"></ul>
+				</div>
+			</div>
+		</div>
+
+		<div data-role="page" id="configProfScreen" data-theme="b">
+			<div class="header" data-role="header" data-theme="b">
+				<h1>Dozentenwahl</h1>
+				<a href="" class="home" data-role="button" data-icon="custom-home" data-iconpos="notext"></a>
+			</div>
+			<div class="contentArea" data-role="content" data-theme="b">
+				<div id="listviewProfs" style="display: block;">
+					<ul class="elementsListview" id="listviewProfsList" data-inset="true" data-filter="true" data-role="listview" data-theme="b" data-autodividers="true" data-dividertheme="b"></ul>
+				</div>
+			</div>
+		</div>
+
+		<div data-role="page" id="configRoomScreen" data-theme="c">
+			<div class="header" data-role="header" data-theme="c">
+				<h1>Raumwahl</h1>
+				<a href="" class="home" data-role="button" data-icon="custom-home" data-iconpos="notext"></a>
+			</div>
+			<div class="contentArea" data-role="content" data-theme="c">
+				<div id="listviewRooms">
+					<ul class="elementsListview" id="listviewRoomsList" data-inset="true" data-filter="true" data-role="listview" data-theme="c" data-dividertheme="c"></ul>
+				</div>
+			</div>
+		</div>
+
+		<div data-role="page" id="findRoomScreen" data-theme="d">
+			<div class="header" data-role="header" data-theme="d">
+				<h1>Suche</h1>
+				<a href="" class="home" data-role="button" data-icon="custom-home" data-iconpos="notext"></a>
+			</div>
+			<div class="contentArea" data-role="content" data-theme="d">
+				<div id="startTime" class="searchRoomParamModifier">
+					<div style="font-weight: bold;">
+						Startzeit:
+					</div>
+					<a class="searchRoomResetStarttime" href="" data-role="button" data-icon="refresh" data-inline="true" data-theme="d"> Jetzt </a>
+					<div data-role="controlgroup" data-type="horizontal">
+						<select name="selectChoiceDays" class="modifyDate startDays" data-modify-subject="DAYS">
+
+						</select>
+						<select name="selectChoiceMonths" class="modifyDate startMonths" data-modify-subject="MONTHS">
+
+						</select>
+						<select name="selectChoiceYears" class="modifyDate startYears" data-modify-subject="YEARS">
+
+						</select>
+					</div>
+					<div data-role="controlgroup" data-type="horizontal">
+						<select name="selectChoiceHours" class="modifyTime startHours" data-modify-subject="HOURS">
+
+						</select>
+						<select name="selectChoiceMinutes" class="modifyTime startMinutes" data-modify-subject="MINUTES">
+							<option value="00">00</option>
+							<option value="05">05</option>
+							<option value="10">10</option>
+							<option value="15">15</option>
+							<option value="20">20</option>
+							<option value="25">25</option>
+							<option value="30">30</option>
+							<option value="35">35</option>
+							<option value="40">40</option>
+							<option value="45">45</option>
+							<option value="50">50</option>
+							<option value="55">55</option>
+						</select>
+					</div>
+					<div id="duration" class="searchRoomParamModifier">
+						<div data-role="controlgroup" data-type="horizontal">
+							<div style="font-weight: bold;">
+								Endzeit:
+							</div>
+							<select name="selectChoiceHours" class="modifyDurationTime endHours" data-modify-subject="HOURS">
+
+							</select>
+							<select name="selectChoiceMinutes" class="modifyDurationTime endMinutes" data-modify-subject="MINUTES">
+								<option value="00">00</option>
+								<option value="05">05</option>
+								<option value="10">10</option>
+								<option value="15">15</option>
+								<option value="20">20</option>
+								<option value="25">25</option>
+								<option value="30">30</option>
+								<option value="35">35</option>
+								<option value="40">40</option>
+								<option value="45">45</option>
+								<option value="50">50</option>
+								<option value="55">55</option>
+							</select>
+						</div>
+						<div data-role="controlgroup" data-type="horizontal">
+							<select name="selectChoiceRoomType" class="modifyRoomCategory"></select>
+						</div>
+
+					</div>
+					<a class="startRoomSearch" href="" data-role="button" data-icon="search" data-theme="d" data-inline="true">Raum finden</a>
+				</div>
+			</div>
+		</div>
+
+		<div data-role="page" id="timetableScreen">
+			<div class="header" data-role="header">
+				<h1 class="ttInfo"><span id="ttInfoCourse"></span></h1>
+				<a href="" class="home" data-role="button" data-icon="custom-home" data-iconpos="notext"></a>
+				<a href="" class="toggleView" data-role="button" data-icon="custom-list" data-iconpos="notext"></a>
+			</div>
+			<div class="contentArea" data-role="content" style="width: 100%;">
+				<div class="ttTimetable" data-days="1">
+					<ul class="ttEvents"></ul>
+
+					<div class="ttDays" style="width: 100%; height: 2em;">
+						<div class="ttDayTimeRect"></div>
+						<div class="ttDaysName" style="height: inherit; float: right;">
+
+						</div>
+					</div>
+					<div class="ttTimes">
+
+					</div>
+				</div>
+			</div>
+			<div class="footer" data-role="footer" data-position="fixed" data-tap-toggle="false">
+				<div class="timetableNavigationBar" data-role="navbar">
+					<ul>
+						<li>
+							<a class="previousDay" href="" data-icon="custom-arrow-l" data-iconpos="notext"></a>
+						</li>
+						<li>
+							<a class="currentDay" href="" data-icon="custom-arrow-cclock" data-theme="a"></a>
+						</li>
+						<li>
+							<a class="nextDay" href="" data-icon="custom-arrow-r" data-iconpos="notext"></a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div data-role="page" id="findRoomResultScreen" data-theme="d">
+			<div class="header" data-role="header" data-theme="d">
+				<h1>Freie Räume</h1>
+				<a href="" class="home" data-role="button" data-icon="custom-home" data-iconpos="notext"></a>
+			</div>
+			<div class="contentArea" data-role="content" data-theme="d">
+				<div id="listviewRoomFree">
+					<ul id="listviewRoomFreeList" data-inset="true" data-role="listview" data-theme="d" data-dividertheme="d"></ul>
+				</div>
+			</div>
+			<div data-role="popup" id="roomDetailInfo" data-overlay-theme="a" data-theme="d" data-corners="false" style="width: 400px; height: 400px;">
+				<div class="header" data-role="header" data-theme="d">
+					<h1 class="roomDetailInfoHeader"></h1>
+					<a href="#" class="closePopup" data-rel="back" data-role="button" data-icon="custom-close-popup" data-iconpos="notext"></a>
+					<a href="" class="ics" data-role="button" data-icon="custom-calendar" data-iconpos="notext"></a>
+				</div>
+				<div class="contentArea" data-role="content" data-theme="d">
+					<table class="roomDetailInfoTable"></table>
+				</div>
+
+			</div>
+		</div>
+
+		<div data-role="page" id="calendarScreen">
+			<div class="header" data-role="header">
+				<h1></h1>
+				<a href="" class="home" data-role="button" data-icon="custom-home" data-iconpos="notext"></a>
+			</div>
+			<div class="contentArea" data-role="content">
+				<div class="calendarSheet" style="background-color: red; width: 100%;">
+					<div class="calendarSheetDays">
+						<div class="daysRowHeader">
+
+						</div>
+						<div class="daysRows">
+
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

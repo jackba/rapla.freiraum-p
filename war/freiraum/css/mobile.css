@@ -1,0 +1,724 @@
+/*--------------------------------------------------------------------------*
+ | Copyright (c) 2013 Fabian Luft, Martin Wilhelm			    			|
+ |                                                                          |
+ | This program is free software; you can redistribute it and/or modify     |
+ | it under the terms of the GNU General Public License as published by the |
+ | Free Software Foundation. A copy of the license has been included with   |
+ | these distribution in the COPYING file, if not go to www.fsf.org         |
+ |                                                                          |
+ | As a special exception, you are granted the permissions to link this     |
+ | program with every library, which license fulfills the Open Source       |
+ | Definition as published by the Open Source Initiative (OSI).             |
+ *--------------------------------------------------------------------------*/
+/****************************************************
+ * Global elements used for every screen
+ ****************************************************/
+html, body {
+	height: 100%;
+	width: 100%;
+	font-family: Segoe UI;
+}
+
+.ui-li-heading {
+	margin: 1em 0;
+	font-size: 100%;
+}
+
+.ui-li-thumb {
+	top: 1px;
+}
+
+/*
+ * Corrected value for the width of the content
+ */
+.ui-content {
+	width: 100%;
+}
+
+/*
+ * Corrected margin for the list view. Default value is margin: -15px
+ * This creates an overflow by correcting this value the problem could been solved
+ */
+.ui-listview-filter-inset {
+	margin: 15px -5px;
+}
+
+/*
+ * Corrected value for the button controlgroup displayed on searchRoom.html
+ * Default value is inline-block. The value inline enables to display horizontal
+ */
+ul.ui-controlgroup-horizontal .ui-controlgroup-controls {
+	display: inline-block;
+	width: 94%;
+}
+
+ul.toggleButtons .ui-controlgroup-controls {
+	margin: 0 3%;
+}
+
+.ui-header .ui-title {
+	margin: 4px 10% 0.8em;
+	height: 44px;
+}
+
+.controlgroupNoMargin {
+	margin: 0;
+}
+/*
+ * used by: home.html, configProf.html, configStudent.html, searchRoom.html
+ */
+div.contentArea {
+	display: table;
+	width: 100%;
+	overflow: auto;
+	padding: 0;
+	text-shadow: none;
+}
+
+/*
+ * used by:
+ * ul#listview			-	home.html
+ * div#form				-	configProf.html
+ * div#listviewCourses	-	configStudent.html
+ * div#listviewProfs	-	configProf.html
+ * div#listviewRooms	-	configRoom.html
+ * div#listviewRoomFree -	searchResultRoom.html
+ */
+div.homeButtonGroup {
+	display: table-cell;
+	vertical-align: middle;
+	padding: 0 10%;
+}
+
+div#form, div#listviewCourses, div#listviewProfs, div#listviewRooms, div#listviewRoomFree {
+	margin: 0 10%;
+	max-width: 80%;
+}
+
+/*
+ * used by: configProf.html
+ */
+div#form {
+	padding: 0 20%;
+}
+
+/*
+ * used by:
+ * div#listviewCourses	-	configStudent.html
+ * div#listviewProf		-	configProf.html
+ */
+div#listviewCourses, div#listviewProfs, div#listviewRooms, div#listviewRoomFree {
+	vertical-align: top;
+}
+
+/*
+ * used by: timetable.html
+ */
+
+div.ttTimetable, ul.ttEvents, div.ttDays, div.ttTimes {
+	-ms-touch-action: pan-y;
+}
+
+div.ttTime {
+	margin-top: 2px;
+	text-shadow: none;
+	z-index: 2;
+}
+
+div.ttTimeDisplay {
+	background-color: #E6E6E6;
+	position: absolute;
+	display: table;
+	height: inherit;
+}
+
+div.ttTimeDisplayWrapper {
+	display: table-cell;
+	vertical-align: middle;
+	text-align: center;
+	font-size: 1.5em;
+	color: #1D1D1D;
+}
+
+div.ttDayTimes {
+	height: inherit;
+	float: right;
+}
+
+div.ttDayTime {
+	margin-left: 2px;
+	height: inherit;
+	background-color: #E6E6E6;
+	float: left;
+}
+
+div.ttDayTimeRect {
+	background-color: #E6E6E6;
+	height: inherit;
+	position: absolute;
+}
+
+div.ttDay {
+	background-color: #E6E6E6;
+	height: inherit;
+	float: left;
+	margin-left: 2px;
+	display: table;
+}
+
+div.ttTimetableOff div.ttDay:first-child {
+	margin-left: 0px;
+}
+
+div.ttDayWrapper {
+	text-align: center;
+	vertical-align: middle;
+	display: table-cell;
+}
+
+/*
+ * used by: timetable.html
+ */
+ul.ttEvents {
+	position: absolute;
+	padding: 0;
+	margin: 0;
+	float: right;
+	list-style: none;
+	z-index: 2;
+}
+
+/*
+ * used by: timetable.html
+ */
+li.ttEvent {
+	position: absolute;
+	padding: 0;
+	margin: 0;
+	background-color: #1C407A;
+	text-shadow: none;
+	overflow: hidden;
+	font-weight: 600;
+	color: #E6E6E6;
+}
+
+div.ttTimetableOff li.ttEvent {
+	position: static;
+	margin-bottom: 2px;
+	width: 100%;
+}
+
+li.ttEvent .multipleEventsSameTime {
+	width: 2%;
+	height: 100%;
+	margin-right: 2%;
+	background-color: #1D1D1D;
+	float: left;
+	font-size: 300%;
+	text-align: center;
+	display: table;
+}
+
+li.ttEvent .multipleEventsSameTime .multipleEventsSameTimeCell {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+ul.ttEventDetails {
+	list-style: none;
+	margin: 0;
+	padding-left: 15px;
+}
+
+li.eventTime {
+	font-weight: lighter;
+	font-size: 0.9em;
+	padding-bottom: 2px;
+}
+
+li.eventTitle {
+	font-size: 1.1em;
+	font-weight: bold;
+}
+
+li.eventInfo {
+	font-size: 1em;
+	font-weight: normal;
+}
+
+.previousDay, .currentDay, .nextDay, .home, .toggleView, .closePopup, .ics {
+	background: none;
+	border: none;
+	height: 35px;
+}
+
+.home, .toggleView, .closePopup, .ics {
+	width: 35px;
+	border: none;
+}
+
+.ui-mobile .ui-btn-left, .ui-mobile .ui-btn-right {
+	top: 1px;
+}
+
+.ui-header .ui-btn-left, .ui-footer .ui-btn-left {
+	left: 10px;
+}
+
+.previousDay .ui-btn-inner, .nextDay .ui-btn-inner, .currentDay .ui-btn-inner {
+	border: none;
+	height: inherit;
+	padding: 0;
+}
+
+.home .ui-btn-inner, .toggleView .ui-btn-inner, .closePopup .ui-btn-inner, .ics .ui-btn-inner {
+	height: 35px;
+	width: 35px;
+	border: none;
+}
+
+.ui-bar-a .ui-shadow, .ui-bar-b .ui-shadow, .ui-bar-c .ui-shadow {
+	box-shadow: none;
+}
+
+.ui-btn-icon-notext .ui-btn-inner .ui-icon {
+	margin: 0;
+}
+
+.ui-icon-custom-home {
+	background-image: url(images/png/35x35/home.png);
+	background-size: contain;
+	height: 35px;
+	width: 35px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/home.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/home.png', sizingMethod='scale')";
+}
+
+.ui-icon-custom-home:active, .ui-icon-custom-home .ui-focus {
+	background-image: url(images/png/35x35/home_invert.png);
+}
+
+.svg .ui-icon-custom-home {
+	background-image: url(images/svg/home.svg);
+}
+
+.svg .ui-icon-custom-home:active, .svg .ui-icon-custom-home .ui-focus {
+	background-image: url(images/svg/home_invert.svg);
+}
+
+.ui-icon-custom-arrow-l {
+	background-image: url(images/png/35x35/arrow_left.png);
+	background-size: contain;
+	height: 35px;
+	width: 35px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/arrow_left.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/arrow_left.png', sizingMethod='scale')";
+}
+
+.ui-icon-custom-arrow-l:active, .ui-icon-custom-arrow-l .ui-focus {
+	background-image: url(images/png/35x35/arrow_left_invert.png);
+}
+
+.svg .ui-icon-custom-arrow-l {
+	background-image: url(images/svg/arrow_left.svg);
+}
+
+.svg .ui-icon-custom-arrow-l:active, .svg .ui-icon-custom-arrow-l .ui-focus {
+	background-image: url(images/svg/arrow_left_invert.svg);
+}
+
+.ui-icon-custom-arrow-cclock {
+	background-image: url(images/png/35x35/arrow_cclock.png);
+	background-size: contain;
+	height: 35px;
+	width: 35px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/arrow_cclock.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/arrow_cclock.png', sizingMethod='scale')";
+}
+
+.ui-icon-custom-arrow-cclock:active, .ui-icon-custom-arrow-cclock .ui-focus {
+	background-image: url(images/png/35x35/arrow_cclock_invert.png);
+}
+
+.svg .ui-icon-custom-arrow-cclock {
+	background-image: url(images/svg/arrow_cclock.svg);
+}
+
+.svg .ui-icon-custom-arrow-cclock:active, .svg .ui-icon-custom-arrow-cclock .ui-focus {
+	background-image: url(images/svg/arrow_cclock_invert.svg);
+}
+
+.ui-icon-custom-arrow-r {
+	background-image: url(images/png/35x35/arrow_right.png);
+	background-size: contain;
+	height: 35px;
+	width: 35px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/arrow_right.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/arrow_right.png', sizingMethod='scale')";
+}
+
+.ui-icon-custom-arrow-r:active, .ui-icon-custom-arrow-r .ui-focus {
+	background-image: url(images/png/35x35/arrow_right_invert.png);
+}
+
+.svg .ui-icon-custom-arrow-r {
+	background-image: url(images/svg/arrow_right.svg);
+}
+
+.svg .ui-icon-custom-arrow-r:active, .svg .ui-icon-custom-arrow-r .ui-focus {
+	background-image: url(images/svg/arrow_right_invert.svg);
+}
+
+.ui-icon-custom-close-popup {
+	background-image: url(images/png/35x35/close_popup.png);
+	background-size: contain;
+	height: 35px;
+	width: 35px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/close_popup.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/close_popup.png', sizingMethod='scale')";
+}
+
+.ui-icon-custom-close-popup:active, .ui-icon-custom-close-popup .ui-focus {
+	background-image: url(images/png/35x35/close_popup_invert.png);
+}
+
+.svg .ui-icon-custom-close-popup {
+	background-image: url(images/svg/close_popup.svg);
+}
+
+.svg .ui-icon-custom-close-popup:active, .svg .ui-icon-custom-close-popup .ui-focus {
+	background-image: url(images/svg/close_popup_invert.svg);
+}
+
+.ui-icon-custom-calendar {
+	background-image: url(images/png/35x35/overview_month.png);
+	background-size: contain;
+	height: 35px;
+	width: 35px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/overview_month.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/overview_month.png', sizingMethod='scale')";
+}
+
+.ui-icon-custom-calendar:active, .ui-icon-custom-calendar .ui-focus {
+	background-image: url(images/png/35x35/overview_month_invert.png);
+}
+
+.svg .ui-icon-custom-calendar {
+	background-image: url(images/svg/overview_month.svg);
+}
+
+.svg .ui-icon-custom-calendar:active, .svg .ui-icon-custom-calendar .ui-focus {
+	background-image: url(images/svg/overview_month_invert.svg);
+}
+
+.ui-icon-custom-list {
+	background-image: url(images/png/35x35/list.png);
+	background-size: contain;
+	height: 35px;
+	width: 35px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/list.png', sizingMethod='scale');
+    -ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/list.png', sizingMethod='scale')";
+}
+
+ui-icon-custom-list:active, ui-icon-custom-list .ui-focus {
+	background-image: url(images/png/35x35/list_invert.png);
+}
+
+.svg ui-icon-custom-list {
+	background-image: url(images/svg/list.svg);
+}
+
+.svg .ui-icon-custom-list:active, .svg .ui-icon-custom-list .ui-focus {
+	background-image: url(images/svg/list_invert.svg);
+}
+
+.ui-icon-custom-timetable {
+	background-image: url(images/png/35x35/overview_day.png);
+	background-size: contain;
+	height: 35px;
+	width: 35px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/overview_day.png', sizingMethod='scale');
+    -ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/35x35/overview_day.png', sizingMethod='scale')";
+}
+
+.ui-icon-custom-timetable:active, .ui-icon-custom-timetable .ui-focus {
+	background-image: url(images/png/35x35/overview_day_invert.png);
+}
+
+.svg .ui-icon-custom-timetable {
+	background-image: url(images/svg/overview_day.svg);
+}
+
+.svg .ui-icon-custom-timetable:active, .svg .ui-icon-custom-timetable .ui-focus {
+	background-image: url(images/svg/overview_day_invert.svg);
+}
+
+.ui-btn-icon-top .ui-btn-inner .ui-icon, .ui-btn-icon-bottom .ui-btn-inner .ui-icon {
+	margin: 0 auto;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+/*
+ * used by: timetable.html
+ */
+div.footer {
+	padding: 2px 0;
+	height: 35px;
+}
+
+div#searchParameters {
+	padding: 3%;
+}
+
+div#searchParameters a {
+	margin-left: 0;
+}
+
+div.label {
+	margin: 3% 0 1% 3%;
+	text-align: left;
+}
+
+div.searchParameterHidden {
+	display: none;
+}
+
+a.navigationButtonHidden {
+	display: none;
+}
+
+.searchRoomParamModifier .ui-btn {
+	border-bottom-width: 1px;
+	margin-left: 0;
+}
+
+#startTime {
+	padding: 5%;
+}
+
+#startTime input {
+	font-weight: bold;
+	text-align: center;
+}
+
+.hideElement {
+	display: none;
+}
+
+/*********************************************
+ *Test Home Screen
+ *********************************************/
+
+/*.ui-btn-up-a {
+ background: none;
+ }*/
+
+.homeButtonGroup .ui-btn-inner {
+	border: none;
+	padding-left: 0;
+	padding-right: 0;
+}
+
+.ui-body-a {
+	background: none;
+}
+
+.header {
+	height: 35px;
+	padding: 2px 0;
+}
+
+div.homeButtonGroup {
+	background-color: #1d1d1d;
+}
+
+div.homeButtonGroup a {
+	border: none;
+}
+
+a.gridItems {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+a#configRoom {
+	margin-left: 0;
+}
+
+a#findRoom {
+	margin-right: 0;
+}
+
+/*.header, .footer {
+ background-color: #1d1d1d;
+
+ }*/
+
+div.imageWrapper {
+	text-align: left;
+	vertical-align: bottom;
+	color: white;
+	font-size: 1.2em;
+	padding: 0 0.5em;
+}
+
+div.image {
+	min-height: 65px;
+	min-width: 65px;
+	max-height: 106px;
+	max-width: 106px;
+	height: 106px;
+	width: 106px;
+	margin: 0 auto;
+	background-size: contain;
+	background-repeat: no-repeat;
+}
+
+span.homeButtonDetailInfo {
+	font-weight: normal;
+	font-size: 0.8em;
+}
+
+div#studentImage {
+	background-image: url(images/png/student_rest.png);
+	background-size: contain;
+	height: 106px;
+	width: 106px;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/student_rest.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/student_rest.png', sizingMethod='scale')";
+}
+
+.svg div#studentImage {
+	background-image: url(images/svg/student_rest.svg);
+}
+
+div#profImage {
+	background-image: url(images/png/prof_rest.png);
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/prof_rest.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/prof_rest.png', sizingMethod='scale')";
+}
+
+.svg div#profImage {
+	background-image: url(images/svg/prof_rest.svg);
+}
+
+div#roomImage {
+	background-image: url(images/png/room_rest.png);
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/room_rest.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/room_rest.png', sizingMethod='scale')";
+}
+
+.svg div#roomImage {
+	background-image: url(images/svg/room_rest.svg);
+}
+
+div#findRoomImage {
+	background-image: url(images/png/findRoom_rest.png);
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/findRoom_rest.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/findRoom_rest.png', sizingMethod='scale')";
+}
+
+.svg div#findRoomImage {
+	background-image: url(images/svg/findRoom_rest.svg);
+}
+
+div#bugImage {
+	background-image: url(images/png/bug_rest.png);
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/bug_rest.png', sizingMethod='scale');
+	-ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader( src='images/png/bug_rest.png', sizingMethod='scale')";
+}
+
+.svg div#bugImage {
+	background-image: url(images/svg/bug_rest.svg);
+}
+
+/**
+ * 	used by findRoomScreen
+ */
+
+#findRoomScreen .contentArea .ui-btn-up-d, #findRoomScreen .contentArea .ui-btn-hover-d {
+	border: 2px solid #E6E6E6;
+	background: none;
+}
+
+#findRoomScreen .contentArea .ui-btn-hover-d {
+	border: 2px solid #BBB;
+}
+
+#findRoomScreen .ui-controlgroup-horizontal .ui-select {
+	margin-right: 5px;
+}
+
+/**
+ * 	used by findRoomResultScreen
+ */
+.roomDetailInfoTable {
+	padding: 5%;
+}
+
+td.roomDetailInfoDescr {
+	font-weight: bold;
+}
+
+/**
+ * 	Calendar specific
+ */
+.daysHeader, .day {
+	margin-right: 2px;
+	background-color: #CCC;
+	float: left;
+	text-align: center;
+}
+
+.dayNotInCurMonth {
+	background-color: #E6E6E6;
+}
+
+.today {
+	background-color: #1D1D1D;
+}
+
+.day {
+	margin-top: 2px;
+}
+
+.daysRowHeader div:last-child, .daysRow div:last-child {
+	margin-right: 0px;
+}
+
+div.dayHasAppointmentIndicator {
+	width: 5%;
+	height: 100%;
+	float: left;
+}
+
+div.dayHasAppointment {
+	background-color: #1C407A;
+}
+
+div.dayDateWrapper {
+	display: table;
+	width: 90%;
+	height: 100%;
+	left: -5%;
+}
+
+div.dayDate {
+	display: table-cell;
+	vertical-align: middle;
+	text-align: center;
+	color: #1D1D1D;
+}
+
+.today div.dayDate, .dayNotInCurMonth div.dayDate {
+	color: white;
+}
+
+/**
+ * 	Delete IE10 input field icons
+ */
+::-ms-clear {
+	display: none;
+}
