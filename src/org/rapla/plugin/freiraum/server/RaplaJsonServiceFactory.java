@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.rapla.framework.RaplaContextException;
 import org.rapla.plugin.freiraum.common.CategoryDescription;
+import org.rapla.plugin.freiraum.common.Event;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
 import org.rapla.plugin.freiraum.common.ResourceDescriptor;
 import org.rapla.plugin.freiraum.common.ResourceDetail;
@@ -17,20 +18,24 @@ import com.google.gwtjsonrpc.common.AsyncCallback;
 
 public class RaplaJsonServiceFactory implements RemoteJsonFactory<RaplaJsonService>
 {
-	ResourceDescriptor test1 = new ResourceDescriptor("Room1","resource");
-	ResourceDescriptor test2 = new ResourceDescriptor("Room2","resource");
-	LinkedHashMap<String,  ResourceDetailRow> test = new LinkedHashMap<String, ResourceDetailRow>();
-	{
-		test.put( "name", new ResourceDetailRow("Name","resource1"));
-		test.put( "bild", new ResourceDetailRow("Bild", "bildlink"));
-	}
-	ResourceDetail detail = new ResourceDetail( test);
-	
+	ResourceDescriptor test1 = new ResourceDescriptor(1,"Room1","resource");
+	ResourceDescriptor test2 = new ResourceDescriptor(2,"Room2","resource");
 	List<ResourceDescriptor> testList = new ArrayList<ResourceDescriptor>();
 	{
 		testList.add( test1 );
 		testList.add( test2 );
 	}
+	ResourceDetail detail;
+	{
+		LinkedHashMap<String,  ResourceDetailRow> details = new LinkedHashMap<String, ResourceDetailRow>();
+		List<Event> events = new ArrayList<Event>();
+		events.add(new Event("Vorlesung","10:00", "11:00",testList));
+		details.put( "name", new ResourceDetailRow("Name","resource1"));
+		details.put( "bild", new ResourceDetailRow("Bild", "bildlink"));
+		detail = new ResourceDetail( details, events);
+	}
+	
+	
 	@Override
 	public RaplaJsonService createService(RemoteSession remoteSession)
 			throws RaplaContextException {
@@ -43,7 +48,8 @@ public class RaplaJsonServiceFactory implements RemoteJsonFactory<RaplaJsonServi
 			}
 
 			@Override
-			public void getResource(String id,AsyncCallback<ResourceDetail> callback) {
+			public void getResource(String id,AsyncCallback<ResourceDetail> callback) 
+			{
 				callback.onSuccess( detail);
 			}
 
