@@ -15,6 +15,7 @@ import org.rapla.framework.Configuration;
 import org.rapla.framework.PluginDescriptor;
 import org.rapla.framework.RaplaContextException;
 import org.rapla.framework.logger.Logger;
+import org.rapla.plugin.freiraum.common.RaplaJsonService;
 import org.rapla.server.ServerServiceContainer;
 
 /**
@@ -39,12 +40,14 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
      * @see org.rapla.framework.PluginDescriptor
      */
     public void provideServices(ServerServiceContainer container, Configuration config) throws RaplaContextException {
-        if ( !config.getAttributeAsBoolean("enabled", false) )
-        	return;
+    	// add freiraum even if config not set
+//        if ( !config.getAttributeAsBoolean("enabled", true) )
+//        	return;
 
     	container.addWebpage("freiraum-ajax",FreiraumExportPageGenerator.class, config  );
-    	container.addWebpage("freiraum-push",FreiraumPushPageGenerator.class, config  );
-    	container.addWebpage("freiraum-poll",FreiraumPollPageGenerator.class, config  );
+    	container.addRemoteJsonFactory(RaplaJsonService.class, RaplaJsonServiceFactory.class, config);
+    	//container.addWebpage("freiraum-push",FreiraumPushPageGenerator.class, config  );
+    	//container.addWebpage("freiraum-poll",FreiraumPollPageGenerator.class, config  );
     	
 //        try {
 //            RaplaResourcePageGenerator resourcePageGenerator = container.getContext().lookup(RaplaResourcePageGenerator.class);
