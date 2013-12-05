@@ -35,7 +35,7 @@ public class Event
 	
 	public String toString() 
 	{
-		return name;
+		return name + " " +start + "-" + end ;
 	}
 	
 	
