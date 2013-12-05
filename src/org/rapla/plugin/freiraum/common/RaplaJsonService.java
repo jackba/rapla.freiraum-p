@@ -8,12 +8,18 @@ import com.google.gwtjsonrpc.common.AsyncCallback;
 public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJsonService
 {
 	@AllowCrossSiteRequest
-	/**
+	/** returns a List of ResourceDescriptor 
 	 * @param type is rooms,courses,persons or the key of a dynamic type specified in rapla can be null
 	 * @param categoryId the id of the abteilung/studiengang category can be null 
 	 * @param callback
 	 */
 	void getResources(String type,String categoryId,AsyncCallback<List<ResourceDescriptor>> callback);
+	
+	/** Returns the details of a given resource
+	 * 
+	 * @param id
+	 * @param callback
+	 */
 	@AllowCrossSiteRequest
 	void getResource(String id,AsyncCallback<ResourceDetail> callback);
 	/**
