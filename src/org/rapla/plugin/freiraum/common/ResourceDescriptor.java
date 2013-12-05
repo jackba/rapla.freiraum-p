@@ -1,21 +1,26 @@
 package org.rapla.plugin.freiraum.common;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ResourceDescriptor
 {
 	private String name;
 	private String link;
-	private int id;
+	private String id;
+	private List<String> searchTerms = new ArrayList<String>();
 	
 	public ResourceDescriptor( ) {
 	}
 	
-	public ResourceDescriptor( int id,String name, String link) {
+	public ResourceDescriptor( String id,String name, String link, List<String> searchTerms) {
 		this.id = id;
 		this.name = name;
 		this.link = link;
+		this.searchTerms = searchTerms;
 	}
 	
-	public String getLabel() 
+	public String getName() 
 	{
 		return name;
 	}
@@ -25,7 +30,7 @@ public class ResourceDescriptor
 		return link;
 	}
 	
-	public int getId()
+	public String getId()
 	{
 		return id;
 	}
@@ -33,6 +38,10 @@ public class ResourceDescriptor
 	public String toString()
 	{
 		return name;
+	}
+	
+	public List<String> getSearchTerms() {
+		return searchTerms;
 	}
 
 }

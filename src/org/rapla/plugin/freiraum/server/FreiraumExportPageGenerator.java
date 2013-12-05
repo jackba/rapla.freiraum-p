@@ -720,7 +720,8 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				
 					//String entry = "{\"name\":\"BWL\",\"id\":\"775\"}";
 					
-					String allocatableName = allocatableExporter.getAllocatableNameIfReadable( allocatable);
+					String prefix ="";
+					String allocatableName = allocatableExporter.getAllocatable( allocatable, prefix).getRow("name").getValue();
 					
 					if ( courseLayout )
 					{

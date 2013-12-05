@@ -19,4 +19,14 @@ public class ResourceDetailRow
 		  return label + ":" + value;
 	  }
 	  
+	  public String getLabel() 
+	  {
+		return label;
+	  }
+	  
+	  public String getValue() 
+	  {
+		  return value;
+	  }
+	  
 }

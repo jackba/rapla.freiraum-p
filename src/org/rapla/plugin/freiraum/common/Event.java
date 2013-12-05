@@ -5,7 +5,7 @@ import java.util.List;
 public class Event
 {
 	String name;
-	String begin;
+	String start;
 	String end;
 	List<ResourceDescriptor> resources;
 	
@@ -16,13 +16,13 @@ public class Event
 	public Event(String name,String begin, String end, List<ResourceDescriptor> resources) {
 		super();
 		this.name = name;
-		this.begin = begin;
+		this.start = begin;
 		this.end = end;
 		this.resources = resources;
 	}
 
 	public String getBegin() {
-		return begin;
+		return start;
 	}
 
 	public String getEnd() {

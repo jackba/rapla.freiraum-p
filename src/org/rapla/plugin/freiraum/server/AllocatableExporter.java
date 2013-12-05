@@ -1,22 +1,23 @@
 package org.rapla.plugin.freiraum.server;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.rapla.components.util.DateTools;
 import org.rapla.components.util.SerializableDateTimeFormat;
-import org.rapla.components.util.xml.XMLWriter;
 import org.rapla.entities.Category;
 import org.rapla.entities.NamedComparator;
 import org.rapla.entities.User;
@@ -31,49 +32,52 @@ import org.rapla.entities.dynamictype.ClassificationFilter;
 import org.rapla.entities.dynamictype.DynamicType;
 import org.rapla.entities.storage.RefEntity;
 import org.rapla.entities.storage.internal.SimpleIdentifier;
-import org.rapla.facade.ClientFacade;
+import org.rapla.facade.QueryModule;
+import org.rapla.facade.RaplaComponent;
 import org.rapla.framework.Configuration;
 import org.rapla.framework.RaplaContext;
 import org.rapla.framework.RaplaException;
 import org.rapla.framework.RaplaLocale;
 import org.rapla.plugin.freiraum.TerminalConstants;
+import org.rapla.plugin.freiraum.common.Event;
+import org.rapla.plugin.freiraum.common.ResourceDescriptor;
+import org.rapla.plugin.freiraum.common.ResourceDetail;
+import org.rapla.plugin.freiraum.common.ResourceDetailRow;
 
-public class AllocatableExporter extends XMLWriter implements TerminalConstants {
+public class AllocatableExporter extends RaplaComponent implements TerminalConstants {
 
     public SerializableDateTimeFormat dateTimeFormat;
     RaplaLocale raplaLocale;
     Locale locale;
-    ClientFacade facade;
     Date currentTimeInGMT;
-    private String terminalUser;
     private DynamicType[] courseType;
     private DynamicType[] roomType;
     private DynamicType[] resourceTypes;
     private DynamicType[] eventTypes;
     private DynamicType[] externalPersonTypes;
-
+    User stele;
+    Configuration config;
+    
     public AllocatableExporter(RaplaContext context, Configuration config) throws RaplaException {
-        this(context, config, context.lookup(ClientFacade.class));
-    }
-
-    public AllocatableExporter(RaplaContext context, Configuration config, ClientFacade facade) throws RaplaException {
-        raplaLocale = context.lookup(RaplaLocale.class);
-        this.facade = facade;
+    	super(context);
+    	this.config = config;
+    	raplaLocale = getRaplaLocale();
         dateTimeFormat = new SerializableDateTimeFormat();
         locale = raplaLocale.getLocale();
         currentTimeInGMT = raplaLocale.toRaplaTime(raplaLocale.getImportExportTimeZone(), new Date());
-        eventTypes = getDynamicTypesForKey(config, facade, TerminalConstants.EVENT_TYPES_KEY);
-        resourceTypes = getDynamicTypesForKey(config, facade, TerminalConstants.RESOURCE_TYPES_KEY);
-        roomType = getDynamicTypesForKey(config, facade, TerminalConstants.ROOM_KEY);
-        courseType = getDynamicTypesForKey(config, facade, TerminalConstants.KURS_KEY);
-        terminalUser = config.getChild(TerminalConstants.USER_KEY).getValue(null);
-        externalPersonTypes = getDynamicTypesForKey(config, facade, TerminalConstants.EXTERNAL_PERSON_TYPES_KEY);
+        eventTypes = getDynamicTypesForKey(TerminalConstants.EVENT_TYPES_KEY);
+        resourceTypes = getDynamicTypesForKey(TerminalConstants.RESOURCE_TYPES_KEY);
+        roomType = getDynamicTypesForKey(TerminalConstants.ROOM_KEY);
+        courseType = getDynamicTypesForKey( TerminalConstants.KURS_KEY);
+        String terminalUser = config.getChild(TerminalConstants.USER_KEY).getValue(null);
+        externalPersonTypes = getDynamicTypesForKey(TerminalConstants.EXTERNAL_PERSON_TYPES_KEY);
         if (terminalUser == null) {
             throw new RaplaException("Terminal User must be set to use export");
         }
+        stele =  getQuery().getUser(terminalUser);
     }
 
-    static DynamicType[] getDynamicTypesForKey(Configuration config, ClientFacade facade, String configKey) throws RaplaException {
+    DynamicType[] getDynamicTypesForKey(String configKey) throws RaplaException {
         final List<DynamicType> result = new ArrayList<DynamicType>();
         String configValues = config.getChild(configKey).getValue(null);
         if (configValues == null) {
@@ -84,7 +88,7 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
             for (String dynamicTypeKey : dynamicTypeKeys) {
                 if (dynamicTypeKey.trim().isEmpty())
                     continue;
-                DynamicType dynamicType = facade.getDynamicType(dynamicTypeKey);
+                DynamicType dynamicType = getQuery().getDynamicType(dynamicTypeKey);
                 if (dynamicType == null) {
                     throw new RaplaException("Configuration in Terminal Plugin incorrect. Dynamic Type '" + dynamicTypeKey + "' does not exist. Please check setting for " + configKey);
                 }
@@ -102,92 +106,86 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
         });
         return result.toArray(new DynamicType[result.size()]);
     }
-
-    public void printFreeAllocatable(String name, Date ende) throws IOException {
-        String elementName = "freierRaum";
-        openElement(elementName);
-        String endString = "19:00";
-        if (ende != null) {
-            endString = raplaLocale.formatTime(ende);
-        }
-        printOnLine("name", "Name", name);
-        printOnLine("freiBis", "frei bis", endString);
-        closeElement(elementName);
-    }
-
-
-    /**
-     * creates the export xml-file for the terminal
-     */
-    public void export(BufferedWriter buf, String linkPrefix) throws RaplaException, IOException {
-        String encoding = "utf-8";
-        buf.append("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
-        buf.append("\n<RaplaImport version=\"0.9\">\n");
-        setWriter(buf);
-        setIndentLevel(1);
-        User stele = facade.getUser(terminalUser);
-        {
-            List<Allocatable> allocatables = getAllAllocatables();
-            for (Allocatable alloc : allocatables) {
-                if (alloc.canReadOnlyInformation(stele)) {
-                    boolean exportReservations = alloc.canRead(stele);
-                    printAllocatable(alloc, linkPrefix, exportReservations);
-                }
+    
+	public List<ResourceDescriptor> getAllocatableList(String type,	Category category) throws RaplaException {
+		List<ResourceDescriptor> result = new ArrayList<ResourceDescriptor>();
+        List<Allocatable> allocatables = getAllAllocatables();
+        for (Allocatable allocatable : allocatables) {
+        	Classification classification = allocatable.getClassification();
+            DynamicType dynamicType = classification.getType();
+            if ( type != null && !type.trim().isEmpty())
+            {
+            	if ( type.equals("courses") )
+            	{
+            		if (!isCourse( allocatable))
+            		{
+            			continue;
+            		}
+            	}
+            	if ( type.equals("persons") )
+            	{
+            		if ( ! allocatable.isPerson())
+            		{
+            			continue;
+            		}
+            	}
+            	if ( type.equals("rooms") )
+            	{
+            		if (!isRoom( allocatable))
+            		{
+            			continue;
+            		}
+            	}
+            	else
+            	{
+            		DynamicType dynamicType2 = getQuery().getDynamicType( type);
+            		if ( !dynamicType.equals(dynamicType2 ))
+            		{
+            			continue;
+            		}
+            		
+            	}
+            }
+        	if ( isExternalPerson( dynamicType))
+        	{
+        		  List<AppointmentBlock> blocks = getReservationBlocksToday(allocatable);
+        		  //only export external persons if they have events today
+        		  if ( blocks.size()== 0)
+        		  {
+        			  continue;
+        		  }
+        	}
+        	if ( category != null )
+        	{
+        		Attribute attribute = dynamicType.getAttribute("abteilung");
+        		if (attribute != null)
+        		{
+        			Object abteilung = classification.getValue(attribute);
+        			if ( abteilung == null || !(abteilung instanceof Category))
+        			{
+        				continue;
+        			}
+        			else
+        			{
+        				Category allocCat = (Category) abteilung;
+        				if ( !allocCat.equals( category) && !category.isAncestorOf( allocCat))
+        				{
+            				continue;
+        				}
+        			}
+        		}
+        		else
+        		{
+        			continue;
+        		}
+        	}
+        	ResourceDescriptor description = getAllocatableNameIfReadable(allocatable);
+        	if ( description != null  ) {
+        		result.add( description);
             }
         }
-
-        int maxFreeAllocatables = 99;
-        //testbetrieb
-        /* {
-            String elementName = "freierRaum";
-            openElement(elementName);
-            printOnLine("name", "Name", "Achtung: ");
-            printOnLine("freiBis", "freiBis","Daten vom 21.05.13");
-            closeElement(elementName);
-            maxFreeAllocatables = 2;
-
-        }*/
-
-        {
-            List<Allocatable> allocatables = new ArrayList<Allocatable>();
-            for (DynamicType typeKey : roomType) {
-                ClassificationFilter filter = typeKey.newClassificationFilter();
-                allocatables.addAll(Arrays.asList(facade.getAllocatables(filter.toArray())));
-            }
-            Date today = facade.today();
-            int c = 1;
-            for (Allocatable allocatable : allocatables) {
-                if (c > maxFreeAllocatables)
-                    break;
-                if (!allocatable.canAllocate(stele, null, null, today)) {
-                    continue;
-                }
-
-                Date ende = null;
-                //Date start = null;
-                boolean isUsed = false;
-                for (AppointmentBlock block : getReservationBlocksToday(allocatable)) {
-                    Date blockStart = new Date(block.getStart());
-                    Date blockEnd = new Date(block.getEnd());
-                    if (blockEnd.after(currentTimeInGMT)) {
-                        if (!blockStart.before(currentTimeInGMT)) {
-                            ende = blockStart;
-                        } else {
-                            isUsed = true;
-                            break;
-                        }
-                    }
-                }
-                if (!isUsed) {
-                    String name = getRoomName(allocatable.getClassification(), true, false);
-                    printFreeAllocatable(name, ende);
-                    c++;
-                }
-            }
-        }
-
-        buf.append("</RaplaImport>");
-    }
+        return result;
+	}
 
 	public List<Allocatable> getAllAllocatables() throws RaplaException {
 		List<Allocatable> allocatables = new ArrayList<Allocatable>();
@@ -197,30 +195,29 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
 		    String typeKey = dynamicType.getElementKey();
 		    ClassificationFilter filter = null;
 		    try {
-		        filter = facade.getDynamicType(typeKey).newClassificationFilter();
+		        filter = getQuery().getDynamicType(typeKey).newClassificationFilter();
 		    } catch (RaplaException e) {
 		        System.err.println(e.getMessage());
 		        continue;
 		    }
-		    ArrayList<Allocatable> sortedAllocatables = new ArrayList<Allocatable>(Arrays.asList(facade.getAllocatables(filter.toArray())));
+		    ArrayList<Allocatable> sortedAllocatables = new ArrayList<Allocatable>(Arrays.asList(getQuery().getAllocatables(filter.toArray())));
 		    Collections.sort(sortedAllocatables, new NamedComparator<Allocatable>(locale));
 		    allocatables.addAll(sortedAllocatables);
 		}
 		return allocatables;
 	}
 
-	 public String getAllocatableNameIfReadable(Allocatable allocatable) throws IOException, RaplaException {
+	 public ResourceDescriptor getAllocatableNameIfReadable(Allocatable allocatable) {
 	        Classification classification = allocatable.getClassification();
-	        
 	        if (classification == null)
 	            return null;
 
+	        if ( !allocatable.canReadOnlyInformation( stele) )
+	        {
+	        	return null;
+	        }
+
 	        DynamicType dynamicType = classification.getType();
-	        // only export resource if it matches external persons
-	        // because they have lecture today
-	        if (allocatable.isPerson() && isExternalPerson(dynamicType))
-	            return null;
-	     
 	     
             String name;
             if (isRoom(dynamicType)) { //elementName.equals(ROOM_KEY)) {
@@ -251,93 +248,96 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
             } else {
                 name = classification.getName(locale);
             }
-
-	        return name;
+            String id = ((SimpleIdentifier)((RefEntity<?>)allocatable).getId()).toString();
+	        String link = "";
+	        List<String> searchTerms = new ArrayList<String>(getSearchTerms(allocatable));
+			return new ResourceDescriptor( id, name, link,searchTerms);
 	 }
 
 	 
-    private void printAllocatable(Allocatable allocatable, String linkPrefix, boolean exportReservations) throws IOException, RaplaException {
-        Classification classification = allocatable.getClassification();
-        LinkedHashSet<String> search = new LinkedHashSet<String>();
-
-        if (classification == null)
-            return;
-        List<AppointmentBlock> blocks = getReservationBlocksToday(allocatable);
-
-
+	public Collection<String> getSearchTerms(Allocatable allocatable)
+	{
+		Classification classification = allocatable.getClassification();
         DynamicType dynamicType = classification.getType();
-        // only export resource if it matches external persons
-        // because they have lecture today
-        if (allocatable.isPerson() && isExternalPerson(dynamicType) && blocks.size() == 0)
-            return;
+        
+		LinkedHashSet<String> search = new LinkedHashSet<String>();
+        String searchTerm = null;
+        final String label;
+        if (isRoom(dynamicType)) { //elementName.equals(ROOM_KEY)) {
+            search.add( getRoomName(classification, true, false));
+        } else if (isCourse(dynamicType)) { //elementName.equals(KURS_KEY)) {
+            StringBuffer buf = new StringBuffer();
+            Object titel = classification.getValue("name");
+            if (titel != null) {
+            	search.add( getStringValue(titel));
+            }
+        } else if (allocatable.isPerson()) {
+            Object vorname = classification.getValue("firstname");
+            if (vorname != null && vorname.toString().length() > 0) {
+                search.add( getStringValue( vorname));
+            }
+            Object surname = classification.getValue("surname");
+            if (surname != null) {
+                search.add( getStringValue( surname));
+            }
+        } else {
+        	String name = classification.getName(locale);
+        	if ( name != null)
+        	{
+        		search.add( name);
+        	}
+        }
+        addSearchIfThere(classification, search, "raumart");
+        return search;
+	}
+
+	public ResourceDetail getAllocatable(Allocatable allocatable, String linkPrefix) throws RaplaException, IOException {
+		
+		if (!allocatable.canReadOnlyInformation(stele)) {
+			return null;
+		}
+		boolean exportReservations = allocatable.canRead(stele);
+		Map<String, ResourceDetailRow> attributes = new LinkedHashMap<String, ResourceDetailRow>();
+		List<Event> events = new ArrayList<Event>();
+		
+		List<AppointmentBlock> blocks = getReservationBlocksToday(allocatable);
+    	Classification classification = allocatable.getClassification();
+        DynamicType dynamicType = classification.getType();
+        
         String elementName = allocatable.isPerson() ? "person" : dynamicType.getElementKey();
 
-        openTag(elementName);
-        att("typ", dynamicType.getElementKey());
-        closeTag();
         {
-            String name;
-            String searchTerm = null;
+            String name = getAllocatableNameIfReadable(allocatable).getName();
             final String label;
             if (isRoom(dynamicType)) { //elementName.equals(ROOM_KEY)) {
-                name = getRoomName(classification, true, false);
                 label = "Raum";
-                searchTerm = name;
             } else if (isCourse(dynamicType)) { //elementName.equals(KURS_KEY)) {
-                StringBuffer buf = new StringBuffer();
-                Object titel = classification.getValue("name");
-                if (titel != null) {
-                    buf.append(titel);
-                }
-                name = buf.toString();
-                searchTerm = name;
+ 
                 label = "Kurs";
             } else if (allocatable.isPerson()) {
-                StringBuffer buf = new StringBuffer();
-
-                Object titel = classification.getValue("title");
-                if (titel != null) {
-                    buf.append(titel + " ");
-                }
-                Object vorname = classification.getValue("firstname");
-                if (vorname != null && vorname.toString().length() > 0) {
-                    buf.append(vorname.toString().substring(0, 1) + ". ");
-                    searchTerm = vorname.toString();
-                }
-                Object surname = classification.getValue("surname");
-                if (surname != null) {
-                    buf.append(surname);
-                    searchTerm = surname.toString();
-                }
-                name = buf.toString();
-                label = "Name";
+                 label = "Name";
             } else {
-                name = classification.getName(locale);
-                searchTerm = name;
                 label = "Bezeichnung";
             }
-
-            printOnLine("name", label, name);
-            if (searchTerm != null)
-                search.add(searchTerm);
+            attributes.put("name",printOnLine(label, name));
         }
 
 
-        printAttributeIfThere(classification, "Jahrgang", "jahrgang");
-        printAttributeIfThere(classification, "Studiengang", "abteilung");
-        printAttributeIfThere(classification, "Studiengang", "abteilung", "studiengang");
+        printAttributeIfThere(attributes,classification, "Jahrgang", "jahrgang");
+        printAttributeIfThere(attributes,classification, "Studiengang", "abteilung");
+        printAttributeIfThere(attributes, classification, "Studiengang", "abteilung", "studiengang");
         //addSearchIfThere(classification, search, "abteilung");
 
-        printAttributeIfThere(classification, "E-Mail", "email");
-        printAttributeIfThere(classification, "Bild", "bild");
-        printAttributeIfThere(classification, "Telefon", "telefon");
-        printAttributeIfThere(classification, "Raumart", "raumart");
+        printAttributeIfThere(attributes,classification, "E-Mail", "email");
+        printAttributeIfThere(attributes,classification, "Bild", "bild");
+        printAttributeIfThere(attributes,classification, "Telefon", "telefon");
+        printAttributeIfThere(attributes,classification, "Raumart", "raumart");
         for (int i = 0; i < 10; i++)
-            printAttributeIfThereWithElementAsLabel(classification, "zeile" + i, "zeile" + i);
+            printAttributeIfThere(attributes,classification, "zeile" + i);
 
-        addSearchIfThere(classification, search, "raumart");
+
         String roomName = getRoomName(classification, true, true);
-        printOnLine("raumnr", "Raum", roomName);
+        attributes.put("raumnr",printOnLine( "Raum", roomName));
 
 
         if (exportReservations && blocks.size() > 0) {
@@ -347,74 +347,52 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
                 Object id = ((RefEntity<Allocatable>) allocatable).getId();
                 SimpleIdentifier localname = (org.rapla.entities.storage.internal.SimpleIdentifier) id;
                 String key = /*allocatable.getRaplaType().getLocalName() + "_" + */ "" + localname.getKey();
-                String pageParameters = "page=calendar&user=" + terminalUser + "&file=" + elementName + "&allocatable_id=" + key;
+                String pageParameters = "page=calendar&user=" + stele.getUsername() + "&file=" + elementName + "&allocatable_id=" + key;
 //                String encryptedParamters = encryptionservice != null ?  UrlEncryption.ENCRYPTED_PARAMETER_NAME + "=" + encryptionservice.encrypt(pageParameters) : pageParameters;
                 String encryptedParamters = pageParameters;
                 String url = linkPrefix + "/rapla?" + encryptedParamters;
+                String label;
+                if (allocatable.isPerson())
+                	label =LINK_TITEL_PERSON;
+                else if (isCourse(dynamicType))
+                    label = LINK_TITEL_KURS;
+                else if (isRoom(dynamicType))
+                	label = LINK_TITEL_RAUM;
+                else
+                    label =LINK_TITEL_DEFAULT;
                 //todo: activate encryption
                 try {
-                    printOnLine(attributeName, "Link", new URI(url));
+                    attributes.put( attributeName,printOnLine( label, new URI(url)));
                 } catch (URISyntaxException ex) {
                     //FIXME log exceptions
                 }
             }
-            {
-                String attributeName = "linkTitel";
-                openElementOnLine(attributeName);
-                if (allocatable.isPerson())
-                    printEncode(LINK_TITEL_PERSON);
-                else if (isCourse(dynamicType))
-                    printEncode(LINK_TITEL_KURS);
-                else if (isRoom(dynamicType))
-                    printEncode(LINK_TITEL_RAUM);
-                else
-                    printEncode(LINK_TITEL_DEFAULT);
-                closeElementOnLine(attributeName);
-                println();
-            }
+            
         }
 
         Attribute infoAttr = classification.getAttribute("info");
         if (infoAttr != null) {
-            printAttributeIfThere(classification, "Info", "info");
-        } else if (blocks.size() > 0 && exportReservations) {
-            String attributeName = "info";
-            openTag(attributeName);
-            att("label", "Info");
-            closeTag();
-            print("<![CDATA[");
-            println();
+            printAttributeIfThere(attributes,classification, "Info", "info");
+        } 
+        
+        if (blocks.size() > 0 && exportReservations) {
             for (AppointmentBlock block : blocks) {
                 Appointment appointment = block.getAppointment();
 
-                String resources = getResourceString(dynamicType,
-                        appointment);
+                List<ResourceDescriptor> resources = getResources(dynamicType, appointment);
                 Reservation reservation = appointment.getReservation();
-                Date beginn = new Date(block.getStart());
-                Date end = new Date(block.getEnd());
+                String start = raplaLocale.formatTime(new Date(block.getStart()));
+                String end = raplaLocale.formatTime(new Date(block.getEnd()));
                 String title = reservation.getName(locale);
-                printInfo(title, resources, beginn, end);
+                Event event = new Event(title, start, end, resources);
+                events.add( event );
+                
             }
-            print("]]>");
-            println();
-            closeElement(attributeName);
-        } else {
-            // if there are no blocks and no info attribute just add an empty attribute
-            /*String attributeName = "info";
-            openTag(attributeName);
-            att("label", "Info");
-            closeTag();
-            closeElement(attributeName);*/
-        }
-
-        for (String tag : search) {
-            openElementOnLine("suchbegriff");
-            printEncode(tag);
-            closeElementOnLine("suchbegriff");
-            println();
-        }
-        closeElement(elementName);
-    }
+        } 
+        
+        ResourceDetail result = new ResourceDetail(attributes, events);
+		return result;
+	}
 
 	public boolean isExternalPerson(DynamicType dynamicType) {
 		return Arrays.binarySearch(externalPersonTypes, dynamicType) >= 0;
@@ -443,17 +421,55 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
 	}
 
 
-    private void printAttributeIfThere(Classification classification, String label, String attributeName, String tagName) throws IOException {
+	private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification,
+            String attributeName) throws IOException {
+		 Attribute attribute = classification.getAttribute(attributeName);
+		 if (attribute != null) {
+			 Object value = classification.getValue(attribute);
+			 String label = attribute.getName( locale);
+			 if ( value != null)
+			 {
+			   ResourceDetailRow row  = printOnLine( label, value);
+	            if (row != null)
+	            {
+	            	map.put( attributeName, row);
+	            }
+			 }
+		 }
+   }
+
+    private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification,
+            String label, String attributeName) throws IOException {
+    	printAttributeIfThere(map,classification, label, attributeName, attributeName);
+    }
+    
+    
+
+    private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification, String label, String attributeName, String tagName) throws IOException {
         Attribute attribute = classification.getAttribute(attributeName);
         if (attribute != null) {
             Object value = classification.getValue(attribute);
-            printOnLineIfNotNull(tagName, label, value);
+            if ( value != null)
+            {
+	            ResourceDetailRow row  = printOnLine( label, value);
+	            if (row != null)
+	            {
+	            	map.put( tagName, row);
+	            }
+            }
         }
-
+    }
+    
+    
+    
+    private ResourceDetailRow printOnLine(String label, Object content) throws IOException {
+    	String string = getStringValue( content);
+    	return new ResourceDetailRow( label, string);
     }
 
+
     public String getRoomName(Classification classification, boolean fluegel, boolean validFilename) {
-        Category superCategory = facade.getSuperCategory();
+        Category superCategory = getQuery().getSuperCategory();
         StringBuffer buf = new StringBuffer();
         if (classification.getAttribute("raum") != null) {
             Object raum = classification.getValue("raum");
@@ -473,43 +489,30 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
     }
 
 
-    private String getResourceString(DynamicType dynamicType,
-                                     Appointment appointment) {
-        Reservation reservation = appointment.getReservation();
+    private List<ResourceDescriptor> getResources(DynamicType dynamicType, Appointment appointment) {
+        List<ResourceDescriptor> resources = new ArrayList<ResourceDescriptor>();
+    	Reservation reservation = appointment.getReservation();
         boolean isKurs = isCourse(dynamicType);
         boolean isRaum = isRoom(dynamicType);
-        List<String> allocatableName = new ArrayList<String>();
         for (Allocatable alloc : reservation.getAllocatablesFor(appointment)) {
             DynamicType type = alloc.getClassification().getType();
             //String elementKey = type.getElementKey();
-            if (!isKurs && isCourse(type)) { //elementKey.equals(KURS_KEY)) {
-                allocatableName.add(alloc.getName(locale));
-            }
-            if (!isRaum && isRoom(type)) { //elementKey.equals(ROOM_KEY)) {
-                allocatableName.add(alloc.getName(locale));
-            }
-        }
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < allocatableName.size(); i++) {
-            String allocName = allocatableName.get(i);
-            if (i == 0) {
-                buf.append("(");
-            }
-            if (i > 0) {
-                buf.append(", ");
-            }
-            buf.append(allocName);
-            if (i == allocatableName.size() - 1) {
-                buf.append(")");
+            if ((!isKurs && isCourse(type)) || (!isRaum && isRoom(type)))
+            {
+            	ResourceDescriptor descriptor = getAllocatableNameIfReadable(alloc);
+            	if ( descriptor != null)
+            	{
+            		resources.add(descriptor);
+            	}
             }
         }
-        String resources = buf.toString();
         return resources;
     }
 
     private List<AppointmentBlock> getReservationBlocksToday(
             Allocatable allocatable) throws RaplaException {
-        Date start = facade.today();
+        QueryModule facade = getQuery();
+		Date start = facade.today();
         Date end = DateTools.addDay(start);
         List<AppointmentBlock> array = new ArrayList<AppointmentBlock>();
         Reservation[] reservations = facade.getReservations(new Allocatable[]{allocatable}, start, end);
@@ -521,64 +524,6 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
         }
         Collections.sort(array, new AppointmentBlockStartComparator());
         return array;
-    }
-
-
-
-    private void printOnLineIfNotNull(String tagName, String label, Object content) throws IOException {
-        if (content != null) {
-            printOnLine(tagName, label, content);
-        }
-    }
-
-    private void printOnLine(String tagName, String label, Object content) throws IOException {
-        openTag(tagName);
-        if (label != null) {
-            att("label", label);
-        }
-        closeTagOnLine();
-        printValue(content);
-        closeElementOnLine(tagName);
-        println();
-    }
-
-
-    private void printInfo(String title, String resources, Date beginn, Date end) throws IOException {
-        openElement("div");
-        openElementOnLine("span");
-        String beginnString = raplaLocale.formatTime(beginn);
-        print(beginnString);
-        closeElementOnLine("span");
-        if (end != null) {
-            print(" - ");
-            openElementOnLine("span");
-            String endString = raplaLocale.formatTime(end);
-            print(endString);
-            closeElementOnLine("span");
-        }
-        println();
-        openElementOnLine("span");
-        printEncode(title);
-        closeElementOnLine("span");
-        println();
-        openElementOnLine("span");
-        print(resources);
-        closeElementOnLine("span");
-        println();
-        closeElement("div");
-    }
-
-    private void printAttributeIfThere(Classification classification,
-                                       String label, String attributeName) throws IOException {
-        printAttributeIfThere(classification, label, attributeName, attributeName);
-    }
-
-    private void printAttributeIfThereWithElementAsLabel(Classification classification, String attributeName, String tagName) throws IOException {
-        Attribute attribute = classification.getAttribute(attributeName);
-        if (attribute != null) {
-            Object value = classification.getValue(attribute);
-            printOnLineIfNotNull(tagName, attribute.getName().toString(), value);
-        }
     }
 
     private void addSearchIfThere(Classification classification,
@@ -593,20 +538,7 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
         }
     }
 
-    private void printValue(Object value) throws IOException {
-        if (value == null) {
-            return;
-        }
-        if (value instanceof URI) {
-            print("<![CDATA[");
-            print(value.toString());
-            print("]]>");
-        } else {
-            String string = getStringValue(value);
-            printEncode(string.replace("\n", "<br/>"));
-        }
-    }
-
+   
     private String getStringValue(Object value) {
         if (value instanceof Category) {
             String toString = ((Category) value).getName(locale);
@@ -622,4 +554,6 @@ public class AllocatableExporter extends XMLWriter implements TerminalConstants 
             return value.toString();
         }
     }
+
+
 }

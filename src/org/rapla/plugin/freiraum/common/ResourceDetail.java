@@ -19,7 +19,7 @@ public class ResourceDetail {
 		this.events = events;
 	}
 
-	public ResourceDetailRow getValue(String key)
+	public ResourceDetailRow getRow(String key)
 	{
 		return attributeMap.get( key);
 	}
@@ -32,5 +32,10 @@ public class ResourceDetail {
 	public String toString()
 	{
 		return attributeMap.toString() + " " + events.toString();
+	}
+	
+	public List<Event> getEvents() 
+	{
+		return events;
 	}
 }

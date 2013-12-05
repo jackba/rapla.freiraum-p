@@ -1,33 +1,34 @@
 package org.rapla.plugin.freiraum.common;
 
-import java.util.List;
 
 
 public class CategoryDescription
 {
-	private List<CategoryDescription> children;
+	private String id;
 	private String name;
 	
 	public CategoryDescription()
 	{
+		name = "";
 	}
 	
-	public CategoryDescription(List<CategoryDescription> children, String name) 
+	public CategoryDescription(String id, String name) 
 	{
 		super();
-		this.children = children;
+		this.id = id;
 		this.name = name;
-	}
-
-	public List<CategoryDescription> getChildren() 
-	{
-		return children;
 	}
 
 	public String getName() 
 	{
 		return name;
 	}
+	
+	public String getId()
+	{
+		return id;
+	}
+	
 	
 	public String toString()
 	{
