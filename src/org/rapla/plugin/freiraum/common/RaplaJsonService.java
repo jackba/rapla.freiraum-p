@@ -9,7 +9,7 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 {
 	@AllowCrossSiteRequest
 	/** returns a List of ResourceDescriptor 
-	 * @param type is rooms,courses,persons or the key of a dynamic type specified in rapla can be null
+	 * @param type can be "rooms","courses","persons" or the key of a dynamic type specified in rapla can be null
 	 * @param categoryId the id of the abteilung/studiengang category can be null 
 	 * @param callback
 	 */
