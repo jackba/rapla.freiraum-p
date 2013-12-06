@@ -122,14 +122,14 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             			continue;
             		}
             	}
-            	if ( type.equals("persons") )
+            	else if ( type.equals("persons") )
             	{
             		if ( ! allocatable.isPerson())
             		{
             			continue;
             		}
             	}
-            	if ( type.equals("rooms") )
+            	else if ( type.equals("rooms") )
             	{
             		if (!isRoom( allocatable))
             		{
