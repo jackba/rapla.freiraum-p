@@ -50,7 +50,6 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 
     public SerializableDateTimeFormat dateTimeFormat;
     RaplaLocale raplaLocale;
-    Date currentTimeInGMT;
     private DynamicType[] courseType;
     private DynamicType[] roomType;
     private DynamicType[] resourceTypes;
@@ -64,7 +63,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     	this.config = config;
     	raplaLocale = getRaplaLocale();
         dateTimeFormat = new SerializableDateTimeFormat();
-        currentTimeInGMT = raplaLocale.toRaplaTime(raplaLocale.getImportExportTimeZone(), new Date());
+        
         eventTypes = getDynamicTypesForKey(TerminalConstants.EVENT_TYPES_KEY);
         resourceTypes = getDynamicTypesForKey(TerminalConstants.RESOURCE_TYPES_KEY);
         roomType = getDynamicTypesForKey(TerminalConstants.ROOM_KEY);
@@ -149,12 +148,13 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             }
         	if ( isExternalPerson( dynamicType))
         	{
-        		  List<AppointmentBlock> blocks = getReservationBlocksToday(allocatable);
-        		  //only export external persons if they have events today
-        		  if ( blocks.size()== 0)
-        		  {
-        			  continue;
-        		  }
+        		Date today = getQuery().today();
+        		List<AppointmentBlock> blocks = getReservationBlocks(allocatable, today);
+        		//only export external persons if they have events today
+        		if ( blocks.size()== 0)
+        		{
+        			continue;
+        		}
         	}
         	if ( category != null )
         	{
@@ -187,6 +187,75 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         }
         return result;
 	}
+	
+	//Collection<FreeRoom> 
+	public void getFreeRooms(Date start, Date end, Locale locale) throws RaplaException
+	{
+		int maxFreeAllocatables = 99;
+        //testbetrieb
+        /* {
+            String elementName = "freierRaum";
+            openElement(elementName);
+            printOnLine("name", "Name", "Achtung: ");
+            printOnLine("freiBis", "freiBis","Daten vom 21.05.13");
+            closeElement(elementName);
+            maxFreeAllocatables = 2;
+
+        }*/
+
+        {
+            List<Allocatable> allocatables = new ArrayList<Allocatable>();
+            QueryModule facade = getQuery();
+			for (DynamicType typeKey : roomType) {
+                ClassificationFilter filter = typeKey.newClassificationFilter();
+                allocatables.addAll(Arrays.asList(facade.getAllocatables(filter.toArray())));
+            }
+            int c = 1;
+            Date date = getQuery().today();
+            for (Allocatable allocatable : allocatables) {
+                if (c > maxFreeAllocatables)
+                    break;
+                
+                if (!allocatable.canAllocate(stele, null, null, date)) {
+                    continue;
+                }
+
+                Date ende = null;
+                //Date start = null;
+                boolean isUsed = false;
+                Date currentTimeInGMT = raplaLocale.toRaplaTime(raplaLocale.getImportExportTimeZone(), new Date());
+                for (AppointmentBlock block : getReservationBlocks(allocatable, date)) {
+                    Date blockStart = new Date(block.getStart());
+                    Date blockEnd = new Date(block.getEnd());
+                    if (blockEnd.after(currentTimeInGMT)) {
+                        if (!blockStart.before(currentTimeInGMT)) {
+                            ende = blockStart;
+                        } else {
+                            isUsed = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isUsed) {
+                    String name = getRoomName(allocatable.getClassification(), true, false, locale);
+               //     printFreeAllocatable(name, ende);
+                    c++;
+                }
+            }
+        }
+	}
+	
+//	 public void printFreeAllocatable(String name, Date ende) throws IOException {
+//	        String elementName = "freierRaum";
+//	        String endString = "19:00";
+//	        if (ende != null) {
+//	            endString = raplaLocale.formatTime(ende);
+//	        }
+//	        printOnLine("name", "Name", name);
+//	        printOnLine("freiBis", "frei bis", endString);
+//	        closeElement(elementName);
+//	    }
+
 
 	public List<Allocatable> getAllAllocatables() throws RaplaException {
 		List<Allocatable> allocatables = new ArrayList<Allocatable>();
@@ -302,7 +371,8 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		Map<String, ResourceDetailRow> attributes = new LinkedHashMap<String, ResourceDetailRow>();
 		List<Event> events = new ArrayList<Event>();
 		
-		List<AppointmentBlock> blocks = getReservationBlocksToday(allocatable);
+		Date today = getQuery().today();
+		List<AppointmentBlock> blocks = getReservationBlocks(allocatable, today);
     	Classification classification = allocatable.getClassification();
         DynamicType dynamicType = classification.getType();
         
@@ -421,8 +491,11 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		return Arrays.binarySearch(courseType, dynamicType) >= 0;
 	}
 
-	public boolean isReservationTypeAllowed(Reservation res) {
-		return Arrays.binarySearch(eventTypes, res.getClassification().getType()) >= 0;
+	private boolean isReservationTypeAllowed(Reservation res) {
+		if (Arrays.binarySearch(eventTypes, res.getClassification().getType()) <0)
+			return false;
+		boolean canReadReservationsFromOthers = true;
+		return canRead(res, stele, canReadReservationsFromOthers);
 	}
 
 
@@ -507,18 +580,20 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         return resources;
     }
 
-    private List<AppointmentBlock> getReservationBlocksToday(
-            Allocatable allocatable) throws RaplaException {
+    private List<AppointmentBlock> getReservationBlocks(
+            Allocatable allocatable, Date date) throws RaplaException {
         QueryModule facade = getQuery();
-		Date start = facade.today();
+		Date start = date;
         Date end = DateTools.addDay(start);
         List<AppointmentBlock> array = new ArrayList<AppointmentBlock>();
         Reservation[] reservations = facade.getReservations(new Allocatable[]{allocatable}, start, end);
         for (Reservation res : reservations) {
-            if (isReservationTypeAllowed(res))
+        	if (isReservationTypeAllowed(res))
+        	{
                 for (Appointment app : res.getAppointmentsFor(allocatable)) {
                     app.createBlocks(start, end, array);
                 }
+        	}
         }
         Collections.sort(array, new AppointmentBlockStartComparator());
         return array;

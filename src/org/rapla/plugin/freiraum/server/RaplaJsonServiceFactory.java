@@ -1,11 +1,13 @@
 package org.rapla.plugin.freiraum.server;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
 import org.rapla.entities.Category;
 import org.rapla.entities.EntityNotFoundException;
+import org.rapla.entities.MultiLanguageName;
 import org.rapla.entities.domain.Allocatable;
 import org.rapla.entities.storage.EntityResolver;
 import org.rapla.entities.storage.RefEntity;
@@ -114,30 +116,51 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 			@Override
 			public void getOrganigram(String categoryId, String language,AsyncCallback<List<CategoryDescription>> callback) {
 				Category category;
-				try
+				if ( categoryId == null)
 				{
-					category = getCategoryForId( categoryId);
-				}
-				catch (Exception ex)
-				{
-					getLogger().error(ex.getMessage(), ex);
-					callback.onFailure( ex);
-					return;
-				}
-				if ( category == null)
-				{
-					 Category root = getQuery().getSuperCategory();
-					//TODO need to replace with correct category key
-					category = root.getCategory("c2");
+					category = getOrganigram();
 					if ( category == null)
 					{
-						callback.onFailure( new EntityNotFoundException("Category with key c2 needed"));
+						callback.onFailure( new EntityNotFoundException("Category with name studiengang needed"));
+						return;
+					}
+				}
+				else
+				{
+					try
+					{
+						category = getCategoryForId( categoryId);
+					}
+					catch (Exception ex)
+					{
+						getLogger().error(ex.getMessage(), ex);
+						callback.onFailure( ex);
 						return;
 					}
 				}
 				Locale locale = getLocale( language);
 				List<CategoryDescription> result = get( category, locale);
 				callback.onSuccess( result);
+			}
+
+			private Category getOrganigram() {
+				Category root = getQuery().getSuperCategory();
+				// meanwhile we use a fallback
+				for (Category cat: root.getCategories())
+				{
+					MultiLanguageName name = cat.getName();
+					Collection<String> availableLanguages = name.getAvailableLanguages();
+					for ( String language: availableLanguages)
+					{
+						String translation = name.getName(language);
+						// this captures all root categories with name studiengang or studienga"nge
+						if (translation != null && translation.toLowerCase().indexOf("studieng")>= 0)
+						{
+							return cat;
+						}
+					}
+				}
+				return null;
 			}
 			
 			private Category getCategoryForId(String categoryId)
