@@ -29,7 +29,7 @@ public class FreiraumPlugin
 {
 	
 	public static final boolean ENABLE_BY_DEFAULT = true;
-	public static final TypedComponentRole<I18nBundle> RESOURCE_FILE = new TypedComponentRole<I18nBundle>(FreiraumPlugin.class.getPackage().getName() + ".MyPluginResources");
+	public static final TypedComponentRole<I18nBundle> RESOURCE_FILE = new TypedComponentRole<I18nBundle>(FreiraumPlugin.class.getPackage().getName() + ".FreiraumResources");
 
     public void provideServices(ClientServiceContainer container, Configuration config) {
         container.addContainerProvidedComponent(RaplaClientExtensionPoints.PLUGIN_OPTION_PANEL_EXTENSION, TerminalOption.class);

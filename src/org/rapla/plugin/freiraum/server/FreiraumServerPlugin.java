@@ -11,10 +11,12 @@
  | Definition as published by the Open Source Initiative (OSI).             |
  *--------------------------------------------------------------------------*/
 package org.rapla.plugin.freiraum.server;
+import org.rapla.components.xmlbundle.impl.I18nBundleImpl;
 import org.rapla.framework.Configuration;
 import org.rapla.framework.PluginDescriptor;
 import org.rapla.framework.RaplaContextException;
 import org.rapla.framework.logger.Logger;
+import org.rapla.plugin.freiraum.FreiraumPlugin;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
 import org.rapla.server.ServerServiceContainer;
 
@@ -26,7 +28,7 @@ import org.rapla.server.ServerServiceContainer;
 public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceContainer>
 {
     Logger logger;
-    
+
     public FreiraumServerPlugin(Logger logger) {
         this.logger = logger;
     }
@@ -44,6 +46,7 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
 //        if ( !config.getAttributeAsBoolean("enabled", true) )
 //        	return;
 
+    	container.addContainerProvidedComponent(FreiraumPlugin.RESOURCE_FILE, I18nBundleImpl.class, I18nBundleImpl.createConfig(FreiraumPlugin.RESOURCE_FILE.getId()));
     	container.addWebpage("freiraum-ajax",FreiraumExportPageGenerator.class, config  );
     	container.addRemoteJsonFactory(RaplaJsonService.class, RaplaJsonServiceFactory.class, config);
     	//container.addWebpage("freiraum-push",FreiraumPushPageGenerator.class, config  );

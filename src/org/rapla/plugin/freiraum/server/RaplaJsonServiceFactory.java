@@ -2,6 +2,7 @@ package org.rapla.plugin.freiraum.server;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.rapla.entities.Category;
 import org.rapla.entities.EntityNotFoundException;
@@ -60,31 +61,23 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 		return new RaplaJsonService() {
 			
 			@Override
-			public void getResources(String type, String categoryId,AsyncCallback<List<ResourceDescriptor>> callback) {
+			public void getResources(String type, String categoryId, String language,AsyncCallback<List<ResourceDescriptor>> callback) {
 				try
 				{
 					Category category = getCategoryForId(categoryId);
-					List<ResourceDescriptor> result = exporter.getAllocatableList(type, category);
+					Locale locale = getLocale( language);
+					List<ResourceDescriptor> result = exporter.getAllocatableList(type, category, locale);
 					callback.onSuccess(  result);
 				}
 				catch (Exception ex)
 				{
+					getLogger().error(ex.getMessage(), ex);
 					callback.onFailure( ex);
 				}
 			}
 
-			private Category getCategoryForId(String categoryId)
-					throws EntityNotFoundException, RaplaException {
-				Category category = null;
-				if ( categoryId != null && !categoryId.trim().isEmpty())
-				{
-					category = (Category)resolver.resolve( LocalCache.getId(categoryId));
-				}
-				return category;
-			}
-
 			@Override
-			public void getResource(String id,AsyncCallback<ResourceDetail> callback) 
+			public void getResource(String id, String language,AsyncCallback<ResourceDetail> callback) 
 			{
 				// Todo replace with correct link
 //				StringBuffer a = request.getRequestURL();
@@ -95,7 +88,8 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 				{
 					Comparable id2 = LocalCache.getId(id);
 					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
-					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix);
+					Locale locale = getLocale(language); 
+					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix, locale);
 					if ( detail != null)
 					{
 						callback.onSuccess( detail);
@@ -107,13 +101,18 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 				}
 				catch (Exception ex)
 				{
+					getLogger().error(ex.getMessage(), ex);
 					callback.onFailure( ex);
 				}
 				
 			}
 
+			public Locale getLocale(String language) {
+				return language != null && language.trim().toLowerCase().equals("en") ? Locale.ENGLISH: Locale.GERMAN;
+			}
+
 			@Override
-			public void getOrganigram(String categoryId,AsyncCallback<List<CategoryDescription>> callback) {
+			public void getOrganigram(String categoryId, String language,AsyncCallback<List<CategoryDescription>> callback) {
 				Category category;
 				try
 				{
@@ -121,6 +120,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 				}
 				catch (Exception ex)
 				{
+					getLogger().error(ex.getMessage(), ex);
 					callback.onFailure( ex);
 					return;
 				}
@@ -135,17 +135,28 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 						return;
 					}
 				}
-				List<CategoryDescription> result = get( category);
+				Locale locale = getLocale( language);
+				List<CategoryDescription> result = get( category, locale);
 				callback.onSuccess( result);
 			}
 			
-			List<CategoryDescription> get( Category cat)
+			private Category getCategoryForId(String categoryId)
+					throws EntityNotFoundException, RaplaException {
+				Category category = null;
+				if ( categoryId != null && !categoryId.trim().isEmpty())
+				{
+					category = (Category)resolver.resolve( LocalCache.getId(categoryId));
+				}
+				return category;
+			}
+			
+			private List<CategoryDescription> get( Category cat, Locale locale)
 			{
 				List<CategoryDescription> children  =new ArrayList<CategoryDescription>();
 				for (Category child : cat.getCategories())
 				{
 					String id = ((RefEntity<?>)child).getId().toString();
-					String name = child.getName( getLocale());
+					String name = child.getName( locale);
 					CategoryDescription childDescription = new CategoryDescription(id, name);
 					children.add( childDescription);
 				}

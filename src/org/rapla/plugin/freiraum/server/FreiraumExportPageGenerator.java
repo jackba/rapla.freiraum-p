@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -721,7 +722,7 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 					//String entry = "{\"name\":\"BWL\",\"id\":\"775\"}";
 					
 					String prefix ="";
-					String allocatableName = allocatableExporter.getAllocatable( allocatable, prefix).getRow("name").getValue();
+					String allocatableName = allocatableExporter.getAllocatable( allocatable, prefix,Locale.GERMAN).getRow("name").getValue();
 					
 					if ( courseLayout )
 					{

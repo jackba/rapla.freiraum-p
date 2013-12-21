@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.rapla.components.util.DateTools;
 import org.rapla.components.util.SerializableDateTimeFormat;
+import org.rapla.components.xmlbundle.I18nBundle;
 import org.rapla.entities.Category;
 import org.rapla.entities.NamedComparator;
 import org.rapla.entities.User;
@@ -38,6 +39,7 @@ import org.rapla.framework.Configuration;
 import org.rapla.framework.RaplaContext;
 import org.rapla.framework.RaplaException;
 import org.rapla.framework.RaplaLocale;
+import org.rapla.plugin.freiraum.FreiraumPlugin;
 import org.rapla.plugin.freiraum.TerminalConstants;
 import org.rapla.plugin.freiraum.common.Event;
 import org.rapla.plugin.freiraum.common.ResourceDescriptor;
@@ -48,7 +50,6 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 
     public SerializableDateTimeFormat dateTimeFormat;
     RaplaLocale raplaLocale;
-    Locale locale;
     Date currentTimeInGMT;
     private DynamicType[] courseType;
     private DynamicType[] roomType;
@@ -63,7 +64,6 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     	this.config = config;
     	raplaLocale = getRaplaLocale();
         dateTimeFormat = new SerializableDateTimeFormat();
-        locale = raplaLocale.getLocale();
         currentTimeInGMT = raplaLocale.toRaplaTime(raplaLocale.getImportExportTimeZone(), new Date());
         eventTypes = getDynamicTypesForKey(TerminalConstants.EVENT_TYPES_KEY);
         resourceTypes = getDynamicTypesForKey(TerminalConstants.RESOURCE_TYPES_KEY);
@@ -74,6 +74,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         if (terminalUser == null) {
             throw new RaplaException("Terminal User must be set to use export");
         }
+        setChildBundleName(FreiraumPlugin.RESOURCE_FILE);
         stele =  getQuery().getUser(terminalUser);
     }
 
@@ -107,7 +108,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         return result.toArray(new DynamicType[result.size()]);
     }
     
-	public List<ResourceDescriptor> getAllocatableList(String type,	Category category) throws RaplaException {
+	public List<ResourceDescriptor> getAllocatableList(String type,	Category category,Locale locale) throws RaplaException {
 		List<ResourceDescriptor> result = new ArrayList<ResourceDescriptor>();
         List<Allocatable> allocatables = getAllAllocatables();
         for (Allocatable allocatable : allocatables) {
@@ -179,7 +180,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         			continue;
         		}
         	}
-        	ResourceDescriptor description = getAllocatableNameIfReadable(allocatable);
+        	ResourceDescriptor description = getAllocatableNameIfReadable(allocatable,locale);
         	if ( description != null  ) {
         		result.add( description);
             }
@@ -201,13 +202,14 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		        continue;
 		    }
 		    ArrayList<Allocatable> sortedAllocatables = new ArrayList<Allocatable>(Arrays.asList(getQuery().getAllocatables(filter.toArray())));
+		    Locale locale = raplaLocale.getLocale();
 		    Collections.sort(sortedAllocatables, new NamedComparator<Allocatable>(locale));
 		    allocatables.addAll(sortedAllocatables);
 		}
 		return allocatables;
 	}
 
-	 public ResourceDescriptor getAllocatableNameIfReadable(Allocatable allocatable) {
+	 public ResourceDescriptor getAllocatableNameIfReadable(Allocatable allocatable,Locale locale) {
 	        Classification classification = allocatable.getClassification();
 	        if (classification == null)
 	            return null;
@@ -221,7 +223,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	     
             String name;
             if (isRoom(dynamicType)) { //elementName.equals(ROOM_KEY)) {
-                name = getRoomName(classification, true, false);
+                name = getRoomName(classification, true, false,locale);
             } else if (isCourse(dynamicType)) { //elementName.equals(KURS_KEY)) {
                 StringBuffer buf = new StringBuffer();
                 Object titel = classification.getValue("name");
@@ -250,12 +252,12 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             }
             String id = ((SimpleIdentifier)((RefEntity<?>)allocatable).getId()).toString();
 	        String link = "";
-	        List<String> searchTerms = new ArrayList<String>(getSearchTerms(allocatable));
+	        List<String> searchTerms = new ArrayList<String>(getSearchTerms(allocatable,locale));
 			return new ResourceDescriptor( id, name, link,searchTerms);
 	 }
 
 	 
-	public Collection<String> getSearchTerms(Allocatable allocatable)
+	private Collection<String> getSearchTerms(Allocatable allocatable,Locale locale)
 	{
 		Classification classification = allocatable.getClassification();
         DynamicType dynamicType = classification.getType();
@@ -264,21 +266,21 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         String searchTerm = null;
         final String label;
         if (isRoom(dynamicType)) { //elementName.equals(ROOM_KEY)) {
-            search.add( getRoomName(classification, true, false));
+            search.add( getRoomName(classification, true, false, locale));
         } else if (isCourse(dynamicType)) { //elementName.equals(KURS_KEY)) {
             StringBuffer buf = new StringBuffer();
             Object titel = classification.getValue("name");
             if (titel != null) {
-            	search.add( getStringValue(titel));
+            	search.add( getStringValue(titel,locale));
             }
         } else if (allocatable.isPerson()) {
             Object vorname = classification.getValue("firstname");
             if (vorname != null && vorname.toString().length() > 0) {
-                search.add( getStringValue( vorname));
+                search.add( getStringValue( vorname,locale));
             }
             Object surname = classification.getValue("surname");
             if (surname != null) {
-                search.add( getStringValue( surname));
+                search.add( getStringValue( surname, locale));
             }
         } else {
         	String name = classification.getName(locale);
@@ -287,11 +289,11 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         		search.add( name);
         	}
         }
-        addSearchIfThere(classification, search, "raumart");
+        addSearchIfThere(classification, search, "raumart",locale);
         return search;
 	}
 
-	public ResourceDetail getAllocatable(Allocatable allocatable, String linkPrefix) throws RaplaException, IOException {
+	public ResourceDetail getAllocatable(Allocatable allocatable, String linkPrefix,Locale locale) throws RaplaException, IOException {
 		
 		if (!allocatable.canReadOnlyInformation(stele)) {
 			return null;
@@ -306,80 +308,83 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         
         String elementName = allocatable.isPerson() ? "person" : dynamicType.getElementKey();
 
-        {
-            String name = getAllocatableNameIfReadable(allocatable).getName();
+        I18nBundle i18n = getI18n();
+		{
+            String name = getAllocatableNameIfReadable(allocatable, locale).getName();
             final String label;
             if (isRoom(dynamicType)) { //elementName.equals(ROOM_KEY)) {
-                label = "Raum";
+                label = dynamicType.getName(locale);
             } else if (isCourse(dynamicType)) { //elementName.equals(KURS_KEY)) {
- 
-                label = "Kurs";
+                label = dynamicType.getName(locale);
             } else if (allocatable.isPerson()) {
-                 label = "Name";
-            } else {
-                label = "Bezeichnung";
+                 label = i18n.getString("name", locale);
+            } else if (classification.getAttribute("name") != null){
+            	label = classification.getAttribute("name").getName( locale );
             }
-            attributes.put("name",printOnLine(label, name));
+            else
+            {
+                label = i18n.getString("name", locale);
+            }
+            attributes.put("name",printOnLine(label, name, locale));
         }
 
+        printAttributeIfThere(attributes,classification, "jahrgang", locale);
+        printAttributeIfThere(attributes, classification,  "abteilung", locale);
 
-        printAttributeIfThere(attributes,classification, "Jahrgang", "jahrgang");
-        printAttributeIfThere(attributes,classification, "Studiengang", "abteilung");
-        printAttributeIfThere(attributes, classification, "Studiengang", "abteilung", "studiengang");
-        //addSearchIfThere(classification, search, "abteilung");
-
-        printAttributeIfThere(attributes,classification, "E-Mail", "email");
-        printAttributeIfThere(attributes,classification, "Bild", "bild");
-        printAttributeIfThere(attributes,classification, "Telefon", "telefon");
-        printAttributeIfThere(attributes,classification, "Raumart", "raumart");
+        printAttributeIfThere(attributes,classification,  "email", locale);
+        printAttributeIfThere(attributes,classification,  "bild", locale);
+        printAttributeIfThere(attributes,classification,  "telefon", locale);
+        printAttributeIfThere(attributes,classification,  "raumart", locale);
         for (int i = 0; i < 10; i++)
-            printAttributeIfThere(attributes,classification, "zeile" + i);
+            printAttributeIfThere(attributes,classification, "zeile" + i, locale);
 
 
-        String roomName = getRoomName(classification, true, true);
-        attributes.put("raumnr",printOnLine( "Raum", roomName));
-
-
-        if (exportReservations && blocks.size() > 0) {
-            {
-                String attributeName = "resourceURL";
-                @SuppressWarnings("unchecked")
-                Object id = ((RefEntity<Allocatable>) allocatable).getId();
-                SimpleIdentifier localname = (org.rapla.entities.storage.internal.SimpleIdentifier) id;
-                String key = /*allocatable.getRaplaType().getLocalName() + "_" + */ "" + localname.getKey();
-                String pageParameters = "page=calendar&user=" + stele.getUsername() + "&file=" + elementName + "&allocatable_id=" + key;
+    	Attribute attribute = classification.getAttribute("raum");
+    	if ( attribute != null)
+    	{
+    		String roomName = getRoomName(classification, true, true,locale);
+    		String roomLabel = attribute.getName(locale);
+    		attributes.put("raumnr",printOnLine( roomLabel, roomName, locale));
+    	}
+        if (exportReservations && blocks.size() > 0) 
+        {
+            String attributeName = "resourceURL";
+            @SuppressWarnings("unchecked")
+            Object id = ((RefEntity<Allocatable>) allocatable).getId();
+            SimpleIdentifier localname = (org.rapla.entities.storage.internal.SimpleIdentifier) id;
+            String key = /*allocatable.getRaplaType().getLocalName() + "_" + */ "" + localname.getKey();
+            String pageParameters = "page=calendar&user=" + stele.getUsername() + "&file=" + elementName + "&allocatable_id=" + key;
 //                String encryptedParamters = encryptionservice != null ?  UrlEncryption.ENCRYPTED_PARAMETER_NAME + "=" + encryptionservice.encrypt(pageParameters) : pageParameters;
-                String encryptedParamters = pageParameters;
-                String url = linkPrefix + "/rapla?" + encryptedParamters;
-                String label;
-                if (allocatable.isPerson())
-                	label =LINK_TITEL_PERSON;
-                else if (isCourse(dynamicType))
-                    label = LINK_TITEL_KURS;
-                else if (isRoom(dynamicType))
-                	label = LINK_TITEL_RAUM;
-                else
-                    label =LINK_TITEL_DEFAULT;
-                //todo: activate encryption
-                try {
-                    attributes.put( attributeName,printOnLine( label, new URI(url)));
-                } catch (URISyntaxException ex) {
-                    //FIXME log exceptions
-                }
+            String encryptedParamters = pageParameters;
+            String url = linkPrefix + "/rapla?" + encryptedParamters;
+            String label;
+            if (allocatable.isPerson())
+            {
+            	label =i18n.getString("appointments", locale);
+            } else if (isCourse(dynamicType)) {
+                label = i18n.getString("events", locale);
+            } else if (isRoom(dynamicType)) {
+            	label = i18n.getString("allocation", locale);
+            }  else {
+                label =i18n.getString("info", locale);
             }
-            
+            try {
+                attributes.put( attributeName,new ResourceDetailRow( label, new URI(url).toString()));
+            } catch (URISyntaxException ex) {
+                //FIXME log exceptions
+            }
         }
 
         Attribute infoAttr = classification.getAttribute("info");
         if (infoAttr != null) {
-            printAttributeIfThere(attributes,classification, "Info", "info");
+            printAttributeIfThere(attributes,classification, "info", locale);
         } 
         
         if (blocks.size() > 0 && exportReservations) {
             for (AppointmentBlock block : blocks) {
                 Appointment appointment = block.getAppointment();
 
-                List<ResourceDescriptor> resources = getResources(dynamicType, appointment);
+                List<ResourceDescriptor> resources = getResources(dynamicType, appointment,locale);
                 Reservation reservation = appointment.getReservation();
                 String start = raplaLocale.formatTime(new Date(block.getStart()));
                 String end = raplaLocale.formatTime(new Date(block.getEnd()));
@@ -422,14 +427,14 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 
 
 	private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification,
-            String attributeName) throws IOException {
+            String attributeName,Locale locale) throws IOException {
 		 Attribute attribute = classification.getAttribute(attributeName);
 		 if (attribute != null) {
 			 Object value = classification.getValue(attribute);
 			 String label = attribute.getName( locale);
 			 if ( value != null)
 			 {
-			   ResourceDetailRow row  = printOnLine( label, value);
+			   ResourceDetailRow row  = printOnLine( label, value, locale);
 	            if (row != null)
 	            {
 	            	map.put( attributeName, row);
@@ -438,37 +443,30 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		 }
    }
 
-    private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification,
-            String label, String attributeName) throws IOException {
-    	printAttributeIfThere(map,classification, label, attributeName, attributeName);
-    }
+//    private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification, String label, String attributeName, String tagName) throws IOException {
+//        Attribute attribute = classification.getAttribute(attributeName);
+//        if (attribute != null) {
+//            Object value = classification.getValue(attribute);
+//            if ( value != null)
+//            {
+//	            ResourceDetailRow row  = printOnLine( label, value);
+//	            if (row != null)
+//	            {
+//	            	map.put( tagName, row);
+//	            }
+//            }
+//        }
+//    }
+//    
     
     
-
-    private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification, String label, String attributeName, String tagName) throws IOException {
-        Attribute attribute = classification.getAttribute(attributeName);
-        if (attribute != null) {
-            Object value = classification.getValue(attribute);
-            if ( value != null)
-            {
-	            ResourceDetailRow row  = printOnLine( label, value);
-	            if (row != null)
-	            {
-	            	map.put( tagName, row);
-	            }
-            }
-        }
-    }
-    
-    
-    
-    private ResourceDetailRow printOnLine(String label, Object content) throws IOException {
-    	String string = getStringValue( content);
+    private ResourceDetailRow printOnLine(String label, Object content, Locale locale) throws IOException {
+    	String string = getStringValue( content, locale);
     	return new ResourceDetailRow( label, string);
     }
 
 
-    public String getRoomName(Classification classification, boolean fluegel, boolean validFilename) {
+    public String getRoomName(Classification classification, boolean fluegel, boolean validFilename, Locale locale) {
         Category superCategory = getQuery().getSuperCategory();
         StringBuffer buf = new StringBuffer();
         if (classification.getAttribute("raum") != null) {
@@ -489,7 +487,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     }
 
 
-    private List<ResourceDescriptor> getResources(DynamicType dynamicType, Appointment appointment) {
+    private List<ResourceDescriptor> getResources(DynamicType dynamicType, Appointment appointment,Locale locale) {
         List<ResourceDescriptor> resources = new ArrayList<ResourceDescriptor>();
     	Reservation reservation = appointment.getReservation();
         boolean isKurs = isCourse(dynamicType);
@@ -499,7 +497,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             //String elementKey = type.getElementKey();
             if ((!isKurs && isCourse(type)) || (!isRaum && isRoom(type)))
             {
-            	ResourceDescriptor descriptor = getAllocatableNameIfReadable(alloc);
+            	ResourceDescriptor descriptor = getAllocatableNameIfReadable(alloc,locale);
             	if ( descriptor != null)
             	{
             		resources.add(descriptor);
@@ -527,19 +525,18 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     }
 
     private void addSearchIfThere(Classification classification,
-                                  Set<String> search, String attributeName) {
+                                  Set<String> search, String attributeName,Locale locale) {
         Attribute attribute = classification.getAttribute(attributeName);
         if (attribute != null) {
             Object value = classification.getValue(attribute);
             if (value != null) {
-                String string = getStringValue(value);
+                String string = getStringValue(value, locale);
                 search.add(string);
             }
         }
     }
-
    
-    private String getStringValue(Object value) {
+    private String getStringValue(Object value,Locale locale) {
         if (value instanceof Category) {
             String toString = ((Category) value).getName(locale);
             return toString;

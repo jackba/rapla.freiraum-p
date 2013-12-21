@@ -13,7 +13,7 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 	 * @param categoryId the id of the abteilung/studiengang category can be null 
 	 * @param callback
 	 */
-	void getResources(String type,String categoryId,AsyncCallback<List<ResourceDescriptor>> callback);
+	void getResources(String type,String categoryId, String language,AsyncCallback<List<ResourceDescriptor>> callback);
 	
 	/** Returns the details of a given resource
 	 * 
@@ -21,12 +21,12 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 	 * @param callback
 	 */
 	@AllowCrossSiteRequest
-	void getResource(String id,AsyncCallback<ResourceDetail> callback);
+	void getResource(String id, String language,AsyncCallback<ResourceDetail> callback);
 	/**
 	 * returns the child categories to a given categoryId. If id is null all children of the root category are returned
 	 * @param categoryId  
 	 * @param callback
 	 */
 	@AllowCrossSiteRequest
-	void getOrganigram(String categoryId,AsyncCallback<List<CategoryDescription>> callback);
+	void getOrganigram(String categoryId, String language,AsyncCallback<List<CategoryDescription>> callback);
 }
