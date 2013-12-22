@@ -1,6 +1,7 @@
 package org.rapla.plugin.freiraum.common;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.gwtjsonrpc.common.AllowCrossSiteRequest;
 import com.google.gwtjsonrpc.common.AsyncCallback;
@@ -9,11 +10,11 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 {
 	@AllowCrossSiteRequest
 	/** returns a List of ResourceDescriptor 
-	 * @param type can be "rooms","courses","persons" or the key of a dynamic type specified in rapla can be null
+	 * @param resourceType can be "rooms","courses","persons" or the key of a dynamic type specified in rapla can be null
 	 * @param categoryId the id of the abteilung/studiengang category can be null 
 	 * @param callback
 	 */
-	void getResources(String type,String categoryId, String language,AsyncCallback<List<ResourceDescriptor>> callback);
+	void getResources(String resourceType,String categoryId, String language,AsyncCallback<List<ResourceDescriptor>> callback);
 	
 	/** Returns the details of a given resource
 	 * 
@@ -29,4 +30,10 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 	 */
 	@AllowCrossSiteRequest
 	void getOrganigram(String categoryId, String language,AsyncCallback<List<CategoryDescription>> callback);
+	
+	@AllowCrossSiteRequest
+	void getFreeResources(String start, String end, String resourceType, String language,AsyncCallback<Map<ResourceDescriptor,String>> callback);
+	
+	@AllowCrossSiteRequest
+	void getEvents(String start, String end, String resourceId, String language,AsyncCallback<List<Event>> callback);
 }

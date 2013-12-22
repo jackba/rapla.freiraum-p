@@ -2,22 +2,26 @@ package org.rapla.plugin.freiraum.server;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import org.rapla.components.util.ParseDateException;
+import org.rapla.components.util.TimeInterval;
 import org.rapla.entities.Category;
 import org.rapla.entities.EntityNotFoundException;
 import org.rapla.entities.MultiLanguageName;
 import org.rapla.entities.domain.Allocatable;
 import org.rapla.entities.storage.EntityResolver;
 import org.rapla.entities.storage.RefEntity;
-import org.rapla.entities.storage.internal.SimpleIdentifier;
 import org.rapla.facade.RaplaComponent;
 import org.rapla.framework.Configuration;
 import org.rapla.framework.RaplaContext;
 import org.rapla.framework.RaplaContextException;
 import org.rapla.framework.RaplaException;
 import org.rapla.plugin.freiraum.common.CategoryDescription;
+import org.rapla.plugin.freiraum.common.Event;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
 import org.rapla.plugin.freiraum.common.ResourceDescriptor;
 import org.rapla.plugin.freiraum.common.ResourceDetail;
@@ -31,23 +35,6 @@ import com.google.gwtjsonrpc.common.AsyncCallback;
 
 public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJsonFactory<RaplaJsonService>
 {
-//	ResourceDescriptor test1 = new ResourceDescriptor("1","Room1","resource");
-//	ResourceDescriptor test2 = new ResourceDescriptor("2","[Room2","resource");
-//	List<ResourceDescriptor> testList = new ArrayList<ResourceDescriptor>();
-//	{
-//		testList.add( test1 );
-//		testList.add( test2 );
-//	}
-//	ResourceDetail detail;
-//	{
-//		LinkedHashMap<String,  ResourceDetailRow> details = new LinkedHashMap<String, ResourceDetailRow>();
-//		List<Event> events = new ArrayList<Event>();
-//		events.add(new Event("Vorlesung","10:00", "11:00",testList));
-//		details.put( "name", new ResourceDetailRow("Name","resource1"));
-//		details.put( "bild", new ResourceDetailRow("Bild", "bildlink"));
-//		detail = new ResourceDetail( details, events);
-//	}
-//	
 	AllocatableExporter exporter;
 	EntityResolver resolver;
 	
@@ -79,16 +66,16 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 			}
 
 			@Override
-			public void getResource(String id, String language,AsyncCallback<ResourceDetail> callback) 
+			public void getResource(String resourceId, String language,AsyncCallback<ResourceDetail> callback) 
 			{
-				// Todo replace with correct link
+				// FIXME replace with correct link
 //				StringBuffer a = request.getRequestURL();
 //				int indexOf = a.lastIndexOf("/rapla");
 //				String linkPrefix = a.substring(0, indexOf);
 				String linkPrefix = "http://localhost:8051/rapla";
 				try
 				{
-					Comparable id2 = LocalCache.getId(id);
+					Comparable id2 = LocalCache.getId(resourceId);
 					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
 					Locale locale = getLocale(language); 
 					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix, locale);
@@ -109,10 +96,57 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 				
 			}
 
-			public Locale getLocale(String language) {
-				return language != null && language.trim().toLowerCase().equals("en") ? Locale.ENGLISH: Locale.GERMAN;
+			@Override
+			public void getFreeResources(String start, String end,String resourceType, String language,	AsyncCallback<Map<ResourceDescriptor, String>> callback) {
+				try
+				{
+					TimeInterval interval = createInterval(start, end);
+					Locale locale = getLocale(language); 
+					Map<ResourceDescriptor, String> result = exporter.getFreeRooms(interval, resourceType, locale);
+					callback.onSuccess( result );
+				}
+				catch (Exception ex)
+				{
+					getLogger().error(ex.getMessage(), ex);
+					callback.onFailure( ex);
+				}
 			}
 
+			public TimeInterval createInterval(String start, String end)
+					throws ParseDateException {
+				Date startDate = null;
+				Date endDate = null;
+				if ( start == null)
+				{
+					startDate = getRaplaLocale().getSerializableFormat().parseTimestamp( start );
+				}
+				if ( end != null)
+				{
+					endDate = getRaplaLocale().getSerializableFormat().parseTimestamp( end );
+				}
+				TimeInterval interval = new TimeInterval(startDate, endDate);
+				return interval;
+			}
+			
+			@Override
+			public void getEvents(String start, String end, String resourceId, String language,AsyncCallback<List<Event>> callback)
+			{
+				try
+				{
+					Locale locale = getLocale(language); 
+					TimeInterval interval = createInterval(start, end);
+					Comparable id2 = LocalCache.getId(resourceId);
+					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
+					List<Event> result = exporter.getEvents(allocatable, interval,  locale);
+					callback.onSuccess( result );
+				}
+				catch (Exception ex)
+				{
+					getLogger().error(ex.getMessage(), ex);
+					callback.onFailure( ex);
+				}
+			}
+			
 			@Override
 			public void getOrganigram(String categoryId, String language,AsyncCallback<List<CategoryDescription>> callback) {
 				Category category;
@@ -145,7 +179,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 
 			private Category getOrganigram() {
 				Category root = getQuery().getSuperCategory();
-				// meanwhile we use a fallback
+				// there is no given key for the organigram, so we use a fallback
 				for (Category cat: root.getCategories())
 				{
 					MultiLanguageName name = cat.getName();
@@ -172,6 +206,10 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 				}
 				return category;
 			}
+
+			private Locale getLocale(String language) {
+				return language != null && language.trim().toLowerCase().equals("en") ? Locale.ENGLISH: Locale.GERMAN;
+			}
 			
 			private List<CategoryDescription> get( Category cat, Locale locale)
 			{
@@ -185,9 +223,6 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 				}
 				return children;
 			}
-			
-
-			
 		};
 	}
 
