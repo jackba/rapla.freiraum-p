@@ -449,7 +449,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             String attributeName = "resourceURL";
             @SuppressWarnings("unchecked")
             Object id = ((RefEntity<Allocatable>) allocatable).getId();
-            SimpleIdentifier localname = (org.rapla.entities.storage.internal.SimpleIdentifier) id;
+            SimpleIdentifier localname = (SimpleIdentifier) id;
             String key = /*allocatable.getRaplaType().getLocalName() + "_" + */ "" + localname.getKey();
             String pageParameters = "page=calendar&user=" + stele.getUsername() + "&file=" + elementName + "&allocatable_id=" + key;
 //                String encryptedParamters = encryptionservice != null ?  UrlEncryption.ENCRYPTED_PARAMETER_NAME + "=" + encryptionservice.encrypt(pageParameters) : pageParameters;
