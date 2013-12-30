@@ -1,7 +1,6 @@
 package org.rapla.plugin.freiraum.common;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.jws.WebParam;
 import javax.jws.WebService;
@@ -60,7 +59,7 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 			,AsyncCallback<List<Event>> callback);
 	
 	/**Returns the events for a given resource in the given time interval.
-	 * @param start start of the interval format is "2013-12-30 12:30" Note: use %20 for space and  %3A as url encoding
+	 * @param start start of the interval format is "2013-12-30 12:30" Note: use %20 for space and  %3A for : as url encoding
 	 * @param end end of the interval format is "2013-12-30 12:30"
 	 * @param resourceId id of the resource 
 	 * @param language specify a language for the category or attribute names. Rapla will try to find a translation if it exists (if null default server language will be used)
