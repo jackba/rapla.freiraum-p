@@ -3,7 +3,6 @@ package org.rapla.plugin.freiraum.common;
 import java.util.List;
 import java.util.Map;
 
-import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebService;
 
