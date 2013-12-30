@@ -68,6 +68,10 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 			@Override
 			public void getResource(String resourceId, String language,AsyncCallback<ResourceDetail> callback) 
 			{
+				if ( resourceId == null)
+				{
+					throw new IllegalArgumentException("resourceId must be set");
+				}
 				// FIXME replace with correct link
 //				StringBuffer a = request.getRequestURL();
 //				int indexOf = a.lastIndexOf("/rapla");
