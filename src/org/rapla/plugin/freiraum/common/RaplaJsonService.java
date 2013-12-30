@@ -46,8 +46,8 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 			,AsyncCallback<List<CategoryDescription>> callback);
 	/**
 	 *Returns all resources which are open for public and have no booked reservations for the given time interval. If end parameter is not set the max allocatable time will be returned as value in the free resource map.  
-	 * @param start start of the interval. If not set, then current time will be used
-	 * @param end end of the interval. If not set max bookable time will be returned
+	 * @param start start of the interval. If not set, then current time will be used. format is "2013-12-30 12:30"
+	 * @param end end of the interval. If not set max bookable time will be returned. format is "2013-12-30 12:30"
 	 * @param resourceType you can only query resources of a specified type (e.g. room)
 	 * @param language specify a language for the category or attribute names. Rapla will try to find a translation if it exists (if null default server language will be used)
 	 */
@@ -57,11 +57,11 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 			,@WebParam(name="end") String end
 			,@WebParam(name="resourceType") String resourceType
 			,@WebParam(name="language") String language
-			,AsyncCallback<Map<ResourceDescriptor,String>> callback);
+			,AsyncCallback<List<Event>> callback);
 	
 	/**Returns the events for a given resource in the given time interval.
-	 * @param start start of the interval
-	 * @param end end of the interval
+	 * @param start start of the interval format is "2013-12-30 12:30" Note: use %20 for space and  %3A as url encoding
+	 * @param end end of the interval format is "2013-12-30 12:30"
 	 * @param resourceId id of the resource 
 	 * @param language specify a language for the category or attribute names. Rapla will try to find a translation if it exists (if null default server language will be used)
 	 */

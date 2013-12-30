@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.rapla.components.util.ParseDateException;
 import org.rapla.components.util.TimeInterval;
@@ -101,12 +100,12 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 			}
 
 			@Override
-			public void getFreeResources(String start, String end,String resourceType, String language,	AsyncCallback<Map<ResourceDescriptor, String>> callback) {
+			public void getFreeResources(String start, String end,String resourceType, String language,	AsyncCallback<List<Event>> callback) {
 				try
 				{
 					TimeInterval interval = createInterval(start, end);
 					Locale locale = getLocale(language); 
-					Map<ResourceDescriptor, String> result = exporter.getFreeRooms(interval, resourceType, locale);
+					List<Event> result = exporter.getFreeRooms(interval, resourceType, locale);
 					callback.onSuccess( result );
 				}
 				catch (Exception ex)
@@ -120,7 +119,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 					throws ParseDateException {
 				Date startDate = null;
 				Date endDate = null;
-				if ( start == null)
+				if ( start != null)
 				{
 					startDate = getRaplaLocale().getSerializableFormat().parseTimestamp( start );
 				}
@@ -137,6 +136,10 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 			{
 				try
 				{
+					if ( resourceId == null)
+					{
+						throw new IllegalArgumentException("resourceId must be set");
+					}
 					Locale locale = getLocale(language); 
 					TimeInterval interval = createInterval(start, end);
 					Comparable id2 = LocalCache.getId(resourceId);

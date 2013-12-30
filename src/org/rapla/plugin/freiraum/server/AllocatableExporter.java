@@ -202,9 +202,9 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		return events;
 	}
 	
-	public Map<ResourceDescriptor,String> getFreeRooms(TimeInterval interval,String type,Locale locale) throws RaplaException
+	public List<Event> getFreeRooms(TimeInterval interval,String type,Locale locale) throws RaplaException
 	{
-		Map<ResourceDescriptor,String> result = new LinkedHashMap<>();
+		List<Event> result = new ArrayList<>();
 		int maxFreeAllocatables = 99;
         //testbetrieb
         /* {
@@ -247,12 +247,13 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
                 	// current time
                 	requestedStart = raplaLocale.toRaplaTime(raplaLocale.getImportExportTimeZone(), new Date());
                 }
-            	TimeInterval timeInverval = new TimeInterval( requestedStart, requestedEnd != null ? requestedEnd : DateTools.fillDate(requestedStart));
+                Date endInterval =  requestedEnd != null ? requestedEnd:DateTools.fillDate(requestedStart); 
+            	TimeInterval timeInverval = new TimeInterval( requestedStart, endInterval );
 				for (AppointmentBlock block : getReservationBlocks(allocatable, timeInverval)) {
                     Date blockStart = new Date(block.getStart());
                     Date blockEnd = new Date(block.getEnd());
                     if (blockEnd.after(requestedStart)) {
-                        if (!blockStart.before( requestedEnd != null ? requestedEnd : requestedStart)) {
+                        if (!blockStart.before( requestedEnd != null ? requestedEnd : requestedStart )) {
                         	if ( ende == null || blockStart.before( ende))
                         	{
                         		ende = blockStart;
@@ -263,10 +264,17 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
                         }
                     }
                 }
-                if (!isUsed && ende != null && ende.after( requestedStart)) {
+				if  (ende == null)
+				{
+					ende = endInterval;
+				}
+                if (!isUsed && ende.after( requestedStart)) {
                 	ResourceDescriptor descriptor = getAllocatableNameIfReadable(allocatable, locale);
                     String end = raplaLocale.formatTime(ende);
-                	result.put(descriptor, end);
+                    String start = raplaLocale.formatTime( requestedStart );
+                	List<ResourceDescriptor> resourceList = Collections.singletonList( descriptor);
+					Event event = new Event("free", start, end,resourceList);
+					result.add( event);
                 	c++;
                 }
             }
@@ -616,12 +624,20 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	public List<AppointmentBlock> getReservationBlocks(Allocatable allocatable,TimeInterval interval) throws RaplaException {
         QueryModule facade = getQuery();
 		List<AppointmentBlock> array = new ArrayList<AppointmentBlock>();
-        Reservation[] reservations = facade.getReservations(new Allocatable[]{allocatable}, interval.getStart(), interval.getEnd());
+        Date start = interval.getStart();
+		Date end = interval.getEnd();
+		Reservation[] reservations = facade.getReservations(new Allocatable[]{allocatable}, start, end);
         for (Reservation res : reservations) {
         	if (isReservationTypeAllowed(res))
         	{
                 for (Appointment app : res.getAppointmentsFor(allocatable)) {
-                    app.createBlocks(interval.getStart(), interval.getEnd(), array);
+                	Date appStart = start != null ? start : app.getStart();
+                	Date appEnd = end != null ? end : app.getMaxEnd();
+                	if  ( appEnd == null)
+                	{
+                		appEnd = DateTools.addYears( appStart, 5);
+                	}
+                    app.createBlocks(appStart, appEnd, array);
                 }
         	}
         }
