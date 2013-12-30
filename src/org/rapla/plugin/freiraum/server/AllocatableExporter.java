@@ -349,7 +349,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
                 name = classification.getName(locale);
             }
             String id = ((SimpleIdentifier)((RefEntity<?>)allocatable).getId()).toString();
-	        String link = "";
+	        String link = "getResource?resourceId="+id;
 	        List<String> searchTerms = new ArrayList<String>(getSearchTerms(allocatable,locale));
 			return new ResourceDescriptor( id, name, link,searchTerms);
 	 }
@@ -361,12 +361,9 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         DynamicType dynamicType = classification.getType();
         
 		LinkedHashSet<String> search = new LinkedHashSet<String>();
-        String searchTerm = null;
-        final String label;
         if (isRoom(dynamicType)) { //elementName.equals(ROOM_KEY)) {
             search.add( getRoomName(classification, true, false, locale));
         } else if (isCourse(dynamicType)) { //elementName.equals(KURS_KEY)) {
-            StringBuffer buf = new StringBuffer();
             Object titel = classification.getValue("name");
             if (titel != null) {
             	search.add( getStringValue(titel,locale));
@@ -392,7 +389,6 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	}
 
 	public ResourceDetail getAllocatable(Allocatable allocatable, String linkPrefix,Locale locale) throws RaplaException, IOException {
-		
 		if (!allocatable.canReadOnlyInformation(stele)) {
 			return null;
 		}
