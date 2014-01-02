@@ -18,6 +18,7 @@ import org.rapla.framework.RaplaContextException;
 import org.rapla.framework.logger.Logger;
 import org.rapla.plugin.freiraum.FreiraumPlugin;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
+import org.rapla.server.RaplaServerExtensionPoints;
 import org.rapla.server.ServerServiceContainer;
 
 /**
@@ -49,6 +50,7 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
     	container.addContainerProvidedComponent(FreiraumPlugin.RESOURCE_FILE, I18nBundleImpl.class, I18nBundleImpl.createConfig(FreiraumPlugin.RESOURCE_FILE.getId()));
     	container.addWebpage("freiraum-ajax",FreiraumExportPageGenerator.class, config  );
     	container.addRemoteJsonFactory(RaplaJsonService.class, RaplaJsonServiceFactory.class, config);
+    	container.addContainerProvidedComponent( RaplaServerExtensionPoints.HTML_MAIN_MENU_EXTENSION_POINT, FreiraumMenuEntry.class);
     	//container.addWebpage("freiraum-push",FreiraumPushPageGenerator.class, config  );
     	//container.addWebpage("freiraum-poll",FreiraumPollPageGenerator.class, config  );
     	
