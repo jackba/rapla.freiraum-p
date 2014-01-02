@@ -19,6 +19,7 @@ import org.rapla.facade.RaplaComponent;
 import org.rapla.framework.Configuration;
 import org.rapla.framework.RaplaContext;
 import org.rapla.framework.RaplaException;
+import org.rapla.plugin.freiraum.common.ResourceDescriptor;
 import org.rapla.servletpages.RaplaPageGenerator;
 
 public class FreiraumExportPageGenerator extends RaplaComponent implements RaplaPageGenerator {
@@ -711,45 +712,20 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 			
 			if ( layout != null)
 			{
-				List<Allocatable> allAllocatables = allocatableExporter.getAllAllocatables();
 				boolean first = true;
 				StringBuilder allocatableList = new StringBuilder();
 				boolean courseLayout = layout.equals( "courses");
-				boolean roomLayout = layout.equals( "rooms");
-				for ( Allocatable allocatable : allAllocatables)
+				if ( layout.equals( "professors"))
+				{
+					layout = "persons";
+				}
+				List<ResourceDescriptor> allAllocatables = allocatableExporter.getAllocatableList(layout, null,getLocale());
+				for ( ResourceDescriptor allocatable : allAllocatables)
 				{
 				
 					//String entry = "{\"name\":\"BWL\",\"id\":\"775\"}";
-					
-					String prefix ="";
-					String allocatableName = allocatableExporter.getAllocatable( allocatable, prefix,Locale.GERMAN).getRow("name").getValue();
-					
-					if ( courseLayout )
-					{
-						if ( !allocatableExporter.isCourse( allocatable) )
-						{
-							continue;
-						}
-					}
-					else if ( roomLayout )
-					{
-						if ( !allocatableExporter.isRoom( allocatable) )
-						{
-							continue;
-						}
-					}
-					else
-					{
-						if ( allocatableExporter.isCourse( allocatable)  || allocatableExporter.isRoom( allocatable))
-						{
-							continue;
-						}
-					}
-					if ( allocatableName == null)
-					{
-						continue;
-					}
-					int id = ((SimpleIdentifier)((RefEntity)allocatable).getId()).getKey();
+					String allocatableName = allocatable.getName();
+					String id = allocatable.getId();
 					
 					String entry;
 					if ( courseLayout)
@@ -785,9 +761,6 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 			}
 			out.flush();
 			int indexOf = a.lastIndexOf("/rapla");
-			String linkPrefix = a.substring(0, indexOf);
-			
-			//allocatableExporter.export( buf, linkPrefix);
 			buf.close();
 		} 
 		catch (RaplaException ex) {
