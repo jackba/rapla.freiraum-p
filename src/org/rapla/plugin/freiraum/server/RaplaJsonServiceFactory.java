@@ -19,6 +19,7 @@ import org.rapla.framework.Configuration;
 import org.rapla.framework.RaplaContext;
 import org.rapla.framework.RaplaContextException;
 import org.rapla.framework.RaplaException;
+import org.rapla.framework.RaplaLocale;
 import org.rapla.plugin.freiraum.common.CategoryDescription;
 import org.rapla.plugin.freiraum.common.Event;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
@@ -215,7 +216,12 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 			}
 
 			private Locale getLocale(String language) {
-				return language != null && language.trim().toLowerCase().equals("en") ? Locale.ENGLISH: Locale.GERMAN;
+				RaplaLocale raplaLocale = getRaplaLocale();
+				if ( language == null  || language.trim().length() == 0)
+				{
+					return raplaLocale.getLocale();
+				}
+				return new Locale(language);
 			}
 			
 			private List<CategoryDescription> get( Category cat, Locale locale)
