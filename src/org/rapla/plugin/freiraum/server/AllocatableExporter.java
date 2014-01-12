@@ -377,14 +377,22 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             	search.add( getStringValue(titel,locale));
             }
         } else if (allocatable.isPerson()) {
-            Object vorname = classification.getValue("firstname");
-            if (vorname != null && vorname.toString().length() > 0) {
-                search.add( getStringValue( vorname,locale));
-            }
             Object surname = classification.getValue("surname");
             if (surname != null) {
                 search.add( getStringValue( surname, locale));
             }
+            if ( surname == null)
+            {
+	            surname = classification.getValue("lastname");
+	            if (surname != null) {
+	                search.add( getStringValue( surname, locale));
+	            }
+            }
+        	Object vorname = classification.getValue("firstname");
+            if (vorname != null && vorname.toString().length() > 0) {
+                search.add( getStringValue( vorname,locale));
+            }
+
         } else {
         	String name = classification.getName(locale);
         	if ( name != null)
@@ -621,7 +629,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         return getReservationBlocks(allocatable,  new TimeInterval( date, DateTools.addDay(date)) );
     }
 
-	public List<AppointmentBlock> getReservationBlocks(Allocatable allocatable,TimeInterval interval) throws RaplaException {
+	private List<AppointmentBlock> getReservationBlocks(Allocatable allocatable,TimeInterval interval) throws RaplaException {
         QueryModule facade = getQuery();
 		List<AppointmentBlock> array = new ArrayList<AppointmentBlock>();
         Date start = interval.getStart();
