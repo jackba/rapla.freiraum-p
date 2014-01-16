@@ -472,7 +472,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             {
             	label =i18n.getString("appointments", locale);
             } else if (isCourse(dynamicType)) {
-                label = i18n.getString("events", locale);
+                label = i18n.getString("reservations", locale);
             } else if (isRoom(dynamicType)) {
             	label = i18n.getString("allocation", locale);
             }  else {
