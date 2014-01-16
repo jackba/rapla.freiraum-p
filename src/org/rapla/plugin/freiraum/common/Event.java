@@ -6,21 +6,33 @@ public class Event
 {
 	String name;
 	String start;
+	String startDate;
 	String end;
+	String endDate;
 	List<ResourceDescriptor> resources;
 	
 	public Event()
 	{
 	}
 
-	public Event(String name,String begin, String end, List<ResourceDescriptor> resources) {
+	public Event(String name,String startDate, String start, String endDate, String end, List<ResourceDescriptor> resources) {
 		super();
 		this.name = name;
-		this.start = begin;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.start = start;
 		this.end = end;
 		this.resources = resources;
 	}
 
+	public String getStart() {
+		return start;
+	}
+	
+	/**
+	@deprecated use getStart instead
+	*/
+	@Deprecated
 	public String getBegin() {
 		return start;
 	}
@@ -35,7 +47,7 @@ public class Event
 	
 	public String toString() 
 	{
-		return name + " " +start + "-" + end ;
+		return name + " " + start + "-" + end ;
 	}
 	
 	

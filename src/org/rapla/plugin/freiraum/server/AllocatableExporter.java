@@ -147,6 +147,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             		
             	}
             }
+            // TODO special case external persons maybe better modeled with permissions
         	if ( isExternalPerson( dynamicType))
         	{
         		Date today = getQuery().today();
@@ -270,10 +271,12 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 				}
                 if (!isUsed && ende.after( requestedStart)) {
                 	ResourceDescriptor descriptor = getAllocatableNameIfReadable(allocatable, locale);
-                    String end = raplaLocale.formatTime(ende);
+                    String startDate = raplaLocale.formatDate( requestedStart);
                     String start = raplaLocale.formatTime( requestedStart );
+                    String endDate = raplaLocale.formatDate( ende );
+                    String end = raplaLocale.formatTime(ende);
                 	List<ResourceDescriptor> resourceList = Collections.singletonList( descriptor);
-					Event event = new Event("free", start, end,resourceList);
+					Event event = new Event("free", startDate, start, endDate, end,resourceList);
 					result.add( event);
                 	c++;
                 }
@@ -411,9 +414,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		boolean exportReservations = allocatable.canRead(stele);
 		Map<String, ResourceDetailRow> attributes = new LinkedHashMap<String, ResourceDetailRow>();
 		
-		Date today = getQuery().today();
-		List<AppointmentBlock> blocks = getReservationBlocks(allocatable, today);
-    	Classification classification = allocatable.getClassification();
+		Classification classification = allocatable.getClassification();
         DynamicType dynamicType = classification.getType();
         
         String elementName = allocatable.isPerson() ? "person" : dynamicType.getElementKey();
@@ -456,7 +457,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     		String roomLabel = attribute.getName(locale);
     		attributes.put("raumnr",printOnLine( roomLabel, roomName, locale));
     	}
-        if (exportReservations && blocks.size() > 0) 
+    	if (exportReservations ) 
         {
             String attributeName = "resourceURL";
             @SuppressWarnings("unchecked")
@@ -491,7 +492,9 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         } 
         
     	List<Event> events = new ArrayList<Event>();
-        if (blocks.size() > 0 && exportReservations) {
+    	Date today = getQuery().today();
+    	List<AppointmentBlock> blocks = getReservationBlocks(allocatable, today);
+    	if (exportReservations) {
             for (AppointmentBlock block : blocks) {
                 Event event = createEvent(block, dynamicType, locale);
                 events.add( event );
@@ -507,14 +510,17 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		Appointment appointment = block.getAppointment();
 		List<ResourceDescriptor> resources = getResources(dynamicType, appointment,locale);
 		Reservation reservation = appointment.getReservation();
+		String startDate = raplaLocale.formatDate(new Date(block.getStart()));
 		String start = raplaLocale.formatTime(new Date(block.getStart()));
+		String endDate = raplaLocale.formatDate(new Date(block.getEnd()));
 		String end = raplaLocale.formatTime(new Date(block.getEnd()));
+
 		String title = reservation.getName(locale);
-		Event event = new Event(title, start, end, resources);
+		Event event = new Event(title, startDate, start,  endDate, end, resources);
 		return event;
 	}
 
-	public boolean isExternalPerson(DynamicType dynamicType) {
+	private boolean isExternalPerson(DynamicType dynamicType) {
 		return Arrays.binarySearch(externalPersonTypes, dynamicType) >= 0;
 	}
 
