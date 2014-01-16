@@ -34,6 +34,8 @@ public class ResourceDetail {
 		return attributeMap.toString() + " " + events.toString();
 	}
 	
+	/** @deprecated use RaplaJsonService.getEvents() instead and pass currentTime and date as start and the currentDate and 21:00 as end   */
+	@Deprecated 
 	public List<Event> getEvents() 
 	{
 		return events;
