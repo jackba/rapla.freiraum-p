@@ -5,10 +5,10 @@ import java.util.List;
 public class Event
 {
 	String name;
-	String start;
 	String startDate;
-	String end;
+	String start;
 	String endDate;
+	String end;
 	List<ResourceDescriptor> resources;
 	
 	public Event()
