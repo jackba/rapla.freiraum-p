@@ -33,7 +33,6 @@ import org.rapla.entities.dynamictype.Classification;
 import org.rapla.entities.dynamictype.ClassificationFilter;
 import org.rapla.entities.dynamictype.DynamicType;
 import org.rapla.entities.storage.RefEntity;
-import org.rapla.entities.storage.internal.SimpleIdentifier;
 import org.rapla.facade.QueryModule;
 import org.rapla.facade.RaplaComponent;
 import org.rapla.framework.Configuration;
@@ -359,7 +358,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             } else {
                 name = classification.getName(locale);
             }
-            String id = ((SimpleIdentifier)((RefEntity<?>)allocatable).getId()).toString();
+            String id = ((RefEntity<?>)allocatable).getId();
 	        String link = "getResource?resourceId="+id;
 	        List<String> searchTerms = new ArrayList<String>(getSearchTerms(allocatable,locale));
 			return new ResourceDescriptor( id, name, link,searchTerms);
@@ -461,10 +460,8 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         {
             String attributeName = "resourceURL";
             @SuppressWarnings("unchecked")
-            Object id = ((RefEntity<Allocatable>) allocatable).getId();
-            SimpleIdentifier localname = (SimpleIdentifier) id;
-            String key = /*allocatable.getRaplaType().getLocalName() + "_" + */ "" + localname.getKey();
-            String pageParameters = "page=calendar&user=" + stele.getUsername() + "&file=" + elementName + "&allocatable_id=" + key;
+            String id = ((RefEntity<Allocatable>) allocatable).getId();
+            String pageParameters = "page=calendar&user=" + stele.getUsername() + "&file=" + elementName + "&allocatable_id=" + id;
 //                String encryptedParamters = encryptionservice != null ?  UrlEncryption.ENCRYPTED_PARAMETER_NAME + "=" + encryptionservice.encrypt(pageParameters) : pageParameters;
             String encryptedParamters = pageParameters;
             String url = linkPrefix + "/rapla?" + encryptedParamters;

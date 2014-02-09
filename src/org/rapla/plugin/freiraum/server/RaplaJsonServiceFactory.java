@@ -79,7 +79,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 				String linkPrefix = "http://localhost:8051/rapla";
 				try
 				{
-					Comparable id2 = LocalCache.getId(resourceId);
+					String id2 = LocalCache.getId(resourceId);
 					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
 					Locale locale = getLocale(language); 
 					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix, locale);
@@ -143,7 +143,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 					}
 					Locale locale = getLocale(language); 
 					TimeInterval interval = createInterval(start, end);
-					Comparable id2 = LocalCache.getId(resourceId);
+					String id2 = LocalCache.getId(resourceId);
 					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
 					List<Event> result = exporter.getEvents(allocatable, interval,  locale);
 					callback.onSuccess( result );
