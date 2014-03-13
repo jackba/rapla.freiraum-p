@@ -15,7 +15,7 @@ import org.rapla.facade.RaplaComponent;
 import org.rapla.framework.Configuration;
 import org.rapla.framework.RaplaContext;
 import org.rapla.framework.RaplaException;
-import org.rapla.plugin.freiraum.common.ResourceDescriptor;
+import org.rapla.plugin.freiraum.common.ResourceDescription;
 import org.rapla.servletpages.RaplaPageGenerator;
 
 public class FreiraumExportPageGenerator extends RaplaComponent implements RaplaPageGenerator {
@@ -715,8 +715,8 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				{
 					layout = "persons";
 				}
-				List<ResourceDescriptor> allAllocatables = allocatableExporter.getAllocatableList(layout, null,getLocale());
-				for ( ResourceDescriptor allocatable : allAllocatables)
+				List<ResourceDescription> allAllocatables = allocatableExporter.getAllocatableList(layout, null,getLocale());
+				for ( ResourceDescription allocatable : allAllocatables)
 				{
 				
 					//String entry = "{\"name\":\"BWL\",\"id\":\"775\"}";

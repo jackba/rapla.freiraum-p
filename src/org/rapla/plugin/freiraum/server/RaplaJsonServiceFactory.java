@@ -23,17 +23,18 @@ import org.rapla.framework.RaplaLocale;
 import org.rapla.plugin.freiraum.common.CategoryDescription;
 import org.rapla.plugin.freiraum.common.Event;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
-import org.rapla.plugin.freiraum.common.ResourceDescriptor;
+import org.rapla.plugin.freiraum.common.ResourceDescription;
 import org.rapla.plugin.freiraum.common.ResourceDetail;
-import org.rapla.server.RemoteJsonFactory;
+import org.rapla.server.RemoteMethodFactory;
 import org.rapla.server.RemoteSession;
 import org.rapla.storage.LocalCache;
 import org.rapla.storage.RaplaSecurityException;
 import org.rapla.storage.StorageOperator;
 
-import com.google.gwtjsonrpc.common.AsyncCallback;
+import com.google.gwtjsonrpc.common.FutureResult;
+import com.google.gwtjsonrpc.common.ResultImpl;
 
-public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJsonFactory<RaplaJsonService>
+public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMethodFactory<RaplaJsonService>
 {
 	AllocatableExporter exporter;
 	EntityResolver resolver;
@@ -48,92 +49,95 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 	public RaplaJsonService createService(RemoteSession remoteSession)
 			throws RaplaContextException {
 		return new RaplaJsonService() {
-			
 			@Override
-			public void getResources(String type, String categoryId, String language,AsyncCallback<List<ResourceDescriptor>> callback) {
+			public FutureResult<ResourceDescriptionList> getResources(String type, String categoryId, String language) {
 				try
 				{
 					Category category = getCategoryForId(categoryId);
 					Locale locale = getLocale( language);
-					List<ResourceDescriptor> result = exporter.getAllocatableList(type, category, locale);
-					callback.onSuccess(  result);
+					List<ResourceDescription> result = exporter.getAllocatableList(type, category, locale);
+					return new ResultImpl<ResourceDescriptionList>(new ResourceDescriptionList(result));
 				}
-				catch (Exception ex)
+				catch (RaplaException ex)
 				{
-					getLogger().error(ex.getMessage(), ex);
-					callback.onFailure( ex);
+					return new ResultImpl<ResourceDescriptionList>(ex);
 				}
 			}
 
 			@Override
-			public void getResource(String resourceId, String language,AsyncCallback<ResourceDetail> callback) 
+			public FutureResult<ResourceDetail> getResource(String resourceId, String language)  
 			{
-				if ( resourceId == null)
-				{
-					throw new IllegalArgumentException("resourceId must be set");
-				}
-				// FIXME replace with correct link
-//				StringBuffer a = request.getRequestURL();
-//				int indexOf = a.lastIndexOf("/rapla");
-//				String linkPrefix = a.substring(0, indexOf);
-				String linkPrefix = "http://localhost:8051/rapla";
 				try
 				{
+					if ( resourceId == null)
+					{
+						throw new IllegalArgumentException("resourceId must be set");
+					}
+					// FIXME replace with correct link
+	//				StringBuffer a = request.getRequestURL();
+	//				int indexOf = a.lastIndexOf("/rapla");
+	//				String linkPrefix = a.substring(0, indexOf);
+					String linkPrefix = "http://localhost:8051/rapla";
 					String id2 = LocalCache.getId(resourceId);
 					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
 					Locale locale = getLocale(language); 
 					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix, locale);
 					if ( detail != null)
 					{
-						callback.onSuccess( detail);
+						return new ResultImpl<ResourceDetail>(detail);
 					}
 					else
 					{
-						callback.onFailure( new RaplaSecurityException("No permission to read resource"));
+						return new ResultImpl<ResourceDetail>(new RaplaSecurityException("No permission to read resource"));
 					}
 				}
-				catch (Exception ex)
+				catch (RaplaException ex)
 				{
-					getLogger().error(ex.getMessage(), ex);
-					callback.onFailure( ex);
+					return new ResultImpl<ResourceDetail>(ex);
 				}
 				
 			}
 
-			@Override
-			public void getFreeResources(String start, String end,String resourceType, String language,	AsyncCallback<List<Event>> callback) {
+			public FutureResult<EventList> getFreeResources(String start, String end,String resourceType, String language) 
+			{
 				try
 				{
 					TimeInterval interval = createInterval(start, end);
 					Locale locale = getLocale(language); 
 					List<Event> result = exporter.getFreeRooms(interval, resourceType, locale);
-					callback.onSuccess( result );
+					return new ResultImpl<EventList>(new EventList(result));
 				}
-				catch (Exception ex)
+				catch (RaplaException ex)
 				{
-					getLogger().error(ex.getMessage(), ex);
-					callback.onFailure( ex);
+					return new ResultImpl<EventList>(ex);
 				}
 			}
 
-			public TimeInterval createInterval(String start, String end)
-					throws ParseDateException {
-				Date startDate = null;
-				Date endDate = null;
-				if ( start != null)
+			public TimeInterval createInterval(String start, String end) throws RaplaException {
+				try
 				{
-					startDate = getRaplaLocale().getSerializableFormat().parseTimestamp( start );
+					Date startDate = null;
+					Date endDate = null;
+					
+					if ( start != null)
+					{
+						startDate = getRaplaLocale().getSerializableFormat().parseTimestamp( start );
+					}
+					if ( end != null)
+					{
+						endDate = getRaplaLocale().getSerializableFormat().parseTimestamp( end );
+					}
+					TimeInterval interval = new TimeInterval(startDate, endDate);
+					return interval;
 				}
-				if ( end != null)
+				catch (ParseDateException ex)
 				{
-					endDate = getRaplaLocale().getSerializableFormat().parseTimestamp( end );
+					throw new RaplaException( ex.getMessage(), ex);
 				}
-				TimeInterval interval = new TimeInterval(startDate, endDate);
-				return interval;
 			}
 			
 			@Override
-			public void getEvents(String start, String end, String resourceId, String language,AsyncCallback<List<Event>> callback)
+			public FutureResult<EventList> getEvents(String start, String end, String resourceId, String language) 
 			{
 				try
 				{
@@ -146,43 +150,38 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 					String id2 = LocalCache.getId(resourceId);
 					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
 					List<Event> result = exporter.getEvents(allocatable, interval,  locale);
-					callback.onSuccess( result );
+					return new ResultImpl<EventList>(new EventList(result));
 				}
-				catch (Exception ex)
+				catch (RaplaException ex)
 				{
-					getLogger().error(ex.getMessage(), ex);
-					callback.onFailure( ex);
+					return new ResultImpl<EventList>(ex);
 				}
 			}
 			
-			@Override
-			public void getOrganigram(String categoryId, String language,AsyncCallback<List<CategoryDescription>> callback) {
-				Category category;
-				if ( categoryId == null)
+			public FutureResult<CategoryDescriptionList> getOrganigram(String categoryId, String language)  {
+				try
 				{
-					category = getOrganigram();
-					if ( category == null)
+					Category category;
+					if ( categoryId == null)
 					{
-						callback.onFailure( new EntityNotFoundException("Category with name studiengang needed"));
-						return;
+						category = getOrganigram();
+						if ( category == null)
+						{
+							throw new EntityNotFoundException("Category with name studiengang needed");
+						}
 					}
-				}
-				else
-				{
-					try
+					else
 					{
 						category = getCategoryForId( categoryId);
 					}
-					catch (Exception ex)
-					{
-						getLogger().error(ex.getMessage(), ex);
-						callback.onFailure( ex);
-						return;
-					}
+					Locale locale = getLocale( language);
+					List<CategoryDescription> result = get( category, locale);
+					return new ResultImpl<CategoryDescriptionList>(new CategoryDescriptionList(result));
 				}
-				Locale locale = getLocale( language);
-				List<CategoryDescription> result = get( category, locale);
-				callback.onSuccess( result);
+				catch (RaplaException ex)
+				{
+					return new ResultImpl<CategoryDescriptionList>(ex);
+				}
 			}
 
 			private Category getOrganigram() {
@@ -229,7 +228,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteJso
 				List<CategoryDescription> children  =new ArrayList<CategoryDescription>();
 				for (Category child : cat.getCategories())
 				{
-					String id = ((RefEntity<?>)child).getId().toString();
+					String id = ((RefEntity)child).getId().toString();
 					String name = child.getName( locale);
 					CategoryDescription childDescription = new CategoryDescription(id, name);
 					children.add( childDescription);

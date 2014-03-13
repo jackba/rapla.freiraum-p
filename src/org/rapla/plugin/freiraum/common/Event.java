@@ -9,13 +9,13 @@ public class Event
 	String start;
 	String endDate;
 	String end;
-	List<ResourceDescriptor> resources;
+	List<ResourceDescription> resources;
 	
 	public Event()
 	{
 	}
 
-	public Event(String name,String startDate, String start, String endDate, String end, List<ResourceDescriptor> resources) {
+	public Event(String name,String startDate, String start, String endDate, String end, List<ResourceDescription> resources) {
 		super();
 		this.name = name;
 		this.startDate = startDate;
@@ -41,7 +41,7 @@ public class Event
 		return end;
 	}
 
-	public List<ResourceDescriptor> getResources() {
+	public List<ResourceDescription> getResources() {
 		return resources;
 	}
 	

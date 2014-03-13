@@ -3,17 +3,17 @@ package org.rapla.plugin.freiraum.common;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ResourceDescriptor
+public class ResourceDescription
 {
 	private String name;
 	private String link;
 	private String id;
 	private List<String> searchTerms = new ArrayList<String>();
 	
-	public ResourceDescriptor( ) {
+	public ResourceDescription( ) {
 	}
 	
-	public ResourceDescriptor( String id,String name, String link, List<String> searchTerms) {
+	public ResourceDescription( String id,String name, String link, List<String> searchTerms) {
 		this.id = id;
 		this.name = name;
 		this.link = link;

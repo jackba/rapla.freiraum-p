@@ -21,6 +21,7 @@ import org.rapla.components.util.SerializableDateTimeFormat;
 import org.rapla.components.util.TimeInterval;
 import org.rapla.components.xmlbundle.I18nBundle;
 import org.rapla.entities.Category;
+import org.rapla.entities.EntityNotFoundException;
 import org.rapla.entities.NamedComparator;
 import org.rapla.entities.User;
 import org.rapla.entities.domain.Allocatable;
@@ -32,7 +33,6 @@ import org.rapla.entities.dynamictype.Attribute;
 import org.rapla.entities.dynamictype.Classification;
 import org.rapla.entities.dynamictype.ClassificationFilter;
 import org.rapla.entities.dynamictype.DynamicType;
-import org.rapla.entities.storage.RefEntity;
 import org.rapla.facade.QueryModule;
 import org.rapla.facade.RaplaComponent;
 import org.rapla.framework.Configuration;
@@ -42,7 +42,7 @@ import org.rapla.framework.RaplaLocale;
 import org.rapla.plugin.freiraum.FreiraumPlugin;
 import org.rapla.plugin.freiraum.TerminalConstants;
 import org.rapla.plugin.freiraum.common.Event;
-import org.rapla.plugin.freiraum.common.ResourceDescriptor;
+import org.rapla.plugin.freiraum.common.ResourceDescription;
 import org.rapla.plugin.freiraum.common.ResourceDetail;
 import org.rapla.plugin.freiraum.common.ResourceDetailRow;
 
@@ -55,7 +55,8 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     private DynamicType[] resourceTypes;
     private DynamicType[] eventTypes;
     private DynamicType[] externalPersonTypes;
-    User stele;
+    //User stele;
+	String userid;
     Configuration config;
     
     public AllocatableExporter(RaplaContext context, Configuration config) throws RaplaException {
@@ -73,8 +74,14 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         if (terminalUser == null) {
             throw new RaplaException("Terminal User must be set to use export");
         }
+        User user = getQuery().getUser(terminalUser);
+        if ( user == null)
+        {
+        	throw new RaplaException("Terminal User " + terminalUser + " not found ");
+        }
+		userid = user.getId();
+        
         setChildBundleName(FreiraumPlugin.RESOURCE_FILE);
-        stele =  getQuery().getUser(terminalUser);
     }
 
     DynamicType[] getDynamicTypesForKey(String configKey) throws RaplaException {
@@ -107,8 +114,8 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         return result.toArray(new DynamicType[result.size()]);
     }
     
-	public List<ResourceDescriptor> getAllocatableList(String type,	Category category,Locale locale) throws RaplaException {
-		List<ResourceDescriptor> result = new ArrayList<ResourceDescriptor>();
+	public List<ResourceDescription> getAllocatableList(String type,	Category category,Locale locale) throws RaplaException {
+		List<ResourceDescription> result = new ArrayList<ResourceDescription>();
         List<Allocatable> allocatables = getAllAllocatables();
         for (Allocatable allocatable : allocatables) {
         	Classification classification = allocatable.getClassification();
@@ -181,7 +188,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         			continue;
         		}
         	}
-        	ResourceDescriptor description = getAllocatableNameIfReadable(allocatable,locale);
+        	ResourceDescription description = getAllocatableNameIfReadable(allocatable,locale);
         	if ( description != null  ) {
         		result.add( description);
             }
@@ -228,12 +235,13 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 				}
             }
             int c = 1;
+            User stele = getTerminalUser();
             Date date = getQuery().today();
             for (Allocatable allocatable : allocatables) {
                 if (c > maxFreeAllocatables)
                     break;
                 
-                if (!allocatable.canAllocate(stele, null, null, date)) {
+				if (!allocatable.canAllocate(stele, null, null, date)) {
                     continue;
                 }
 
@@ -269,12 +277,12 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 					ende = endInterval;
 				}
                 if (!isUsed && ende.after( requestedStart)) {
-                	ResourceDescriptor descriptor = getAllocatableNameIfReadable(allocatable, locale);
+                	ResourceDescription descriptor = getAllocatableNameIfReadable(allocatable, locale);
                     String startDate = raplaLocale.formatDate( requestedStart);
                     String start = raplaLocale.formatTime( requestedStart );
                     String endDate = raplaLocale.formatDate( ende );
                     String end = raplaLocale.formatTime(ende);
-                	List<ResourceDescriptor> resourceList = Collections.singletonList( descriptor);
+                	List<ResourceDescription> resourceList = Collections.singletonList( descriptor);
 					Event event = new Event("free", startDate, start, endDate, end,resourceList);
 					result.add( event);
                 	c++;
@@ -284,6 +292,10 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         return result;
 	}
 	
+	private User getTerminalUser() throws EntityNotFoundException {
+		return (User) getClientFacade().getOperator().resolve(userid);
+	}
+
 //	 public void printFreeAllocatable(String name, Date ende) throws IOException {
 //	        String elementName = "freierRaum";
 //	        String endString = "19:00";
@@ -317,11 +329,11 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		return allocatables;
 	}
 
-	 public ResourceDescriptor getAllocatableNameIfReadable(Allocatable allocatable,Locale locale) {
+	 public ResourceDescription getAllocatableNameIfReadable(Allocatable allocatable,Locale locale) throws EntityNotFoundException {
 	        Classification classification = allocatable.getClassification();
 	        if (classification == null)
 	            return null;
-
+	        User stele = getTerminalUser();
 	        if ( !allocatable.canReadOnlyInformation( stele) )
 	        {
 	        	return null;
@@ -358,10 +370,10 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             } else {
                 name = classification.getName(locale);
             }
-            String id = ((RefEntity<?>)allocatable).getId();
+            String id = allocatable.getId();
 	        String link = "getResource?resourceId="+id;
 	        List<String> searchTerms = new ArrayList<String>(getSearchTerms(allocatable,locale));
-			return new ResourceDescriptor( id, name, link,searchTerms);
+			return new ResourceDescription( id, name, link,searchTerms);
 	 }
 
 	 
@@ -406,7 +418,8 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         return search;
 	}
 
-	public ResourceDetail getAllocatable(Allocatable allocatable, String linkPrefix,Locale locale) throws RaplaException, IOException {
+	public ResourceDetail getAllocatable(Allocatable allocatable, String linkPrefix,Locale locale) throws RaplaException {
+		User stele = getTerminalUser();
 		if (!allocatable.canReadOnlyInformation(stele)) {
 			return null;
 		}
@@ -459,8 +472,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     	if (exportReservations ) 
         {
             String attributeName = "resourceURL";
-            @SuppressWarnings("unchecked")
-            String id = ((RefEntity<Allocatable>) allocatable).getId();
+            String id = allocatable.getId();
             String pageParameters = "page=calendar&user=" + stele.getUsername() + "&file=" + elementName + "&allocatable_id=" + id;
 //                String encryptedParamters = encryptionservice != null ?  UrlEncryption.ENCRYPTED_PARAMETER_NAME + "=" + encryptionservice.encrypt(pageParameters) : pageParameters;
             String encryptedParamters = pageParameters;
@@ -502,10 +514,9 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		return result;
 	}
 
-	public Event createEvent(AppointmentBlock block, DynamicType dynamicType,
-			Locale locale) {
+	public Event createEvent(AppointmentBlock block, DynamicType dynamicType,Locale locale) throws EntityNotFoundException {
 		Appointment appointment = block.getAppointment();
-		List<ResourceDescriptor> resources = getResources(dynamicType, appointment,locale);
+		List<ResourceDescription> resources = getResources(dynamicType, appointment,locale);
 		Reservation reservation = appointment.getReservation();
 		String startDate = raplaLocale.formatDate(new Date(block.getStart()));
 		String start = raplaLocale.formatTime(new Date(block.getStart()));
@@ -539,16 +550,16 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		return Arrays.binarySearch(courseType, dynamicType) >= 0;
 	}
 
-	private boolean isReservationTypeAllowed(Reservation res) {
+	private boolean isReservationTypeAllowed(Reservation res) throws EntityNotFoundException {
 		if (Arrays.binarySearch(eventTypes, res.getClassification().getType()) <0)
 			return false;
 		boolean canReadReservationsFromOthers = true;
+		User stele = getTerminalUser();
 		return canRead(res, stele, canReadReservationsFromOthers);
 	}
 
 
-	private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification,
-            String attributeName,Locale locale) throws IOException {
+	private void printAttributeIfThere(Map<String, ResourceDetailRow> map,Classification classification, String attributeName,Locale locale) {
 		 Attribute attribute = classification.getAttribute(attributeName);
 		 if (attribute != null) {
 			 Object value = classification.getValue(attribute);
@@ -581,7 +592,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 //    
     
     
-    private ResourceDetailRow printOnLine(String label, Object content, Locale locale) throws IOException {
+    private ResourceDetailRow printOnLine(String label, Object content, Locale locale) {
     	String string = getStringValue( content, locale);
     	return new ResourceDetailRow( label, string);
     }
@@ -608,8 +619,8 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     }
 
 
-    private List<ResourceDescriptor> getResources(DynamicType dynamicType, Appointment appointment,Locale locale) {
-        List<ResourceDescriptor> resources = new ArrayList<ResourceDescriptor>();
+    private List<ResourceDescription> getResources(DynamicType dynamicType, Appointment appointment,Locale locale) throws EntityNotFoundException {
+        List<ResourceDescription> resources = new ArrayList<ResourceDescription>();
     	Reservation reservation = appointment.getReservation();
         boolean isKurs = isCourse(dynamicType);
         boolean isRaum = isRoom(dynamicType);
@@ -618,7 +629,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             //String elementKey = type.getElementKey();
             if ((!isKurs && isCourse(type)) || (!isRaum && isRoom(type)))
             {
-            	ResourceDescriptor descriptor = getAllocatableNameIfReadable(alloc,locale);
+            	ResourceDescription descriptor = getAllocatableNameIfReadable(alloc,locale);
             	if ( descriptor != null)
             	{
             		resources.add(descriptor);
