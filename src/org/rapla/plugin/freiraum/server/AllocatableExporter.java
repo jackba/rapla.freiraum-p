@@ -1,6 +1,5 @@
 package org.rapla.plugin.freiraum.server;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -627,6 +626,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         for (Allocatable alloc : reservation.getAllocatablesFor(appointment)) {
             DynamicType type = alloc.getClassification().getType();
             //String elementKey = type.getElementKey();
+            // FIXME as a requirement this should be uncommented
             if ((!isKurs && isCourse(type)) || (!isRaum && isRoom(type)))
             {
             	ResourceDescription descriptor = getAllocatableNameIfReadable(alloc,locale);

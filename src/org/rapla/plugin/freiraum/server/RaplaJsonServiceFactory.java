@@ -25,14 +25,12 @@ import org.rapla.plugin.freiraum.common.Event;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
 import org.rapla.plugin.freiraum.common.ResourceDescription;
 import org.rapla.plugin.freiraum.common.ResourceDetail;
+import org.rapla.rest.gwtjsonrpc.common.FutureResult;
+import org.rapla.rest.gwtjsonrpc.common.ResultImpl;
 import org.rapla.server.RemoteMethodFactory;
 import org.rapla.server.RemoteSession;
-import org.rapla.storage.LocalCache;
 import org.rapla.storage.RaplaSecurityException;
 import org.rapla.storage.StorageOperator;
-
-import com.google.gwtjsonrpc.common.FutureResult;
-import com.google.gwtjsonrpc.common.ResultImpl;
 
 public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMethodFactory<RaplaJsonService>
 {
@@ -50,17 +48,17 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 			throws RaplaContextException {
 		return new RaplaJsonService() {
 			@Override
-			public FutureResult<ResourceDescriptionList> getResources(String type, String categoryId, String language) {
+			public FutureResult<List<ResourceDescription>> getResources(String type, String categoryId, String language) {
 				try
 				{
 					Category category = getCategoryForId(categoryId);
 					Locale locale = getLocale( language);
 					List<ResourceDescription> result = exporter.getAllocatableList(type, category, locale);
-					return new ResultImpl<ResourceDescriptionList>(new ResourceDescriptionList(result));
+					return new ResultImpl<List<ResourceDescription>>(result);
 				}
 				catch (RaplaException ex)
 				{
-					return new ResultImpl<ResourceDescriptionList>(ex);
+					return new ResultImpl<List<ResourceDescription>>(ex);
 				}
 			}
 
@@ -78,8 +76,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 	//				int indexOf = a.lastIndexOf("/rapla");
 	//				String linkPrefix = a.substring(0, indexOf);
 					String linkPrefix = "http://localhost:8051/rapla";
-					String id2 = LocalCache.getId(resourceId);
-					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
+					Allocatable allocatable = (Allocatable)resolver.resolve( resourceId);
 					Locale locale = getLocale(language); 
 					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix, locale);
 					if ( detail != null)
@@ -98,18 +95,18 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 				
 			}
 
-			public FutureResult<EventList> getFreeResources(String start, String end,String resourceType, String language) 
+			public FutureResult<List<Event>> getFreeResources(String start, String end,String resourceType, String language) 
 			{
 				try
 				{
 					TimeInterval interval = createInterval(start, end);
 					Locale locale = getLocale(language); 
 					List<Event> result = exporter.getFreeRooms(interval, resourceType, locale);
-					return new ResultImpl<EventList>(new EventList(result));
+					return new ResultImpl<List<Event>>(result);
 				}
 				catch (RaplaException ex)
 				{
-					return new ResultImpl<EventList>(ex);
+					return new ResultImpl<List<Event>>(ex);
 				}
 			}
 
@@ -137,7 +134,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 			}
 			
 			@Override
-			public FutureResult<EventList> getEvents(String start, String end, String resourceId, String language) 
+			public FutureResult<List<Event>> getEvents(String start, String end, String resourceId, String language) 
 			{
 				try
 				{
@@ -147,18 +144,17 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 					}
 					Locale locale = getLocale(language); 
 					TimeInterval interval = createInterval(start, end);
-					String id2 = LocalCache.getId(resourceId);
-					Allocatable allocatable = (Allocatable)resolver.resolve( id2);
+					Allocatable allocatable = (Allocatable)resolver.resolve( resourceId);
 					List<Event> result = exporter.getEvents(allocatable, interval,  locale);
-					return new ResultImpl<EventList>(new EventList(result));
+					return new ResultImpl<List<Event>>(result);
 				}
 				catch (RaplaException ex)
 				{
-					return new ResultImpl<EventList>(ex);
+					return new ResultImpl<List<Event>>(ex);
 				}
 			}
 			
-			public FutureResult<CategoryDescriptionList> getOrganigram(String categoryId, String language)  {
+			public FutureResult<List<CategoryDescription>> getOrganigram(String categoryId, String language)  {
 				try
 				{
 					Category category;
@@ -176,11 +172,11 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 					}
 					Locale locale = getLocale( language);
 					List<CategoryDescription> result = get( category, locale);
-					return new ResultImpl<CategoryDescriptionList>(new CategoryDescriptionList(result));
+					return new ResultImpl<List<CategoryDescription>>(result);
 				}
 				catch (RaplaException ex)
 				{
-					return new ResultImpl<CategoryDescriptionList>(ex);
+					return new ResultImpl<List<CategoryDescription>>(ex);
 				}
 			}
 
@@ -209,7 +205,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 				Category category = null;
 				if ( categoryId != null && !categoryId.trim().isEmpty())
 				{
-					category = (Category)resolver.resolve( LocalCache.getId(categoryId));
+					category = (Category)resolver.resolve( categoryId);
 				}
 				return category;
 			}

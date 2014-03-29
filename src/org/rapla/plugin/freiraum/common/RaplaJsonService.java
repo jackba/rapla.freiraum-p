@@ -7,11 +7,11 @@ import javax.jws.WebService;
 
 import org.rapla.components.util.ParseDateException;
 import org.rapla.framework.RaplaException;
-
-import com.google.gwtjsonrpc.common.FutureResult;
+import org.rapla.rest.gwtjsonrpc.common.FutureResult;
+import org.rapla.rest.gwtjsonrpc.common.ResultType;
 
 @WebService
-public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJsonService
+public interface RaplaJsonService extends org.rapla.rest.gwtjsonrpc.common.RemoteJsonService
 {
 	/** returns a List of ResourceDescriptor 
 	 * @param resourceType can be "rooms","courses","persons" or the key of a dynamic type specified in rapla can be null
@@ -19,7 +19,8 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 	 * @param language specify a language for the category or attribute names. Rapla will try to find a translation if it exists (if null default server language will be used)
 	 * @throws RaplaException 
 	 */
-	FutureResult<ResourceDescriptionList> getResources(
+    @ResultType(value=ResourceDescription.class,container=List.class)
+	FutureResult<List<ResourceDescription>> getResources(
 			@WebParam(name="resourceType")String resourceType
 			,@WebParam(name="categoryId")String categoryId
 			,@WebParam(name="language") String language
@@ -41,7 +42,8 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 	 * @param language specify a language for the category or attribute names. Rapla will try to find a translation if it exists (if null default server language will be used)
 	 * @throws RaplaException 
 	 */
-	FutureResult<CategoryDescriptionList> getOrganigram(
+	@ResultType(value=CategoryDescription.class,container=List.class)
+	FutureResult<List<CategoryDescription>> getOrganigram(
 			@WebParam(name="categoryId")String categoryId
 			,@WebParam(name="language") String language
 			);
@@ -54,7 +56,8 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 	 * @throws RaplaException 
 	 * @throws ParseDateException 
 	 */
-	FutureResult<EventList> getFreeResources(
+	@ResultType(value=Event.class,container=List.class)
+	FutureResult<List<Event>> getFreeResources(
 			@WebParam(name="start")String start
 			,@WebParam(name="end") String end
 			,@WebParam(name="resourceType") String resourceType
@@ -69,55 +72,11 @@ public interface RaplaJsonService extends com.google.gwtjsonrpc.common.RemoteJso
 	 * @throws ParseDateException 
 	 * @throws RaplaException 
 	 */
-	FutureResult<EventList> getEvents(
+	@ResultType(value=Event.class,container=List.class)
+	FutureResult<List<Event>> getEvents(
 			@WebParam(name="start")String start
 			,@WebParam(name="end") String end
 			,@WebParam(name="resourceId")String resourceId
 			,@WebParam(name="language") String language
 			);
-	
-	public static class EventList
-	{
-		List<Event> list;
-		EventList() {
-		}
-		public EventList(List<Event> list)
-		{
-			this.list = list;
-		}
-		
-		public List<Event> get() {
-			return list;
-		}
-	}
-	 
-	public static class CategoryDescriptionList
-    {
-    	List<CategoryDescription> list;
-    	CategoryDescriptionList() {
-		}
-    	public CategoryDescriptionList(List<CategoryDescription> list)
-    	{
-    		this.list = list;
-    	}
-    	
-    	public List<CategoryDescription> get() {
-			return list;
-		}
-    }
-	
-	public static class ResourceDescriptionList
-    {
-    	List<ResourceDescription> list;
-    	ResourceDescriptionList() {
-		}
-    	public ResourceDescriptionList(List<ResourceDescription> list)
-    	{
-    		this.list = list;
-    	}
-    	
-    	public List<ResourceDescription> get() {
-			return list;
-		}
-    }
 }

@@ -7,6 +7,6 @@
   "http://google-web-toolkit.googlecode.com/svn/tags/2.5.1/distro-source/core/src/gwt-module.dtd">
 <module rename-to='freiraum_module'>
   <!-- Specify the paths for translatable code                    -->
-  <inherits name='com.google.gwtjsonrpc.GWTJSONRPC'/>
+  <inherits name='org.rapla.rest.gwtjsonrpc.GWTJSONRPC'/>
   <source path='common'/>
 </module>
