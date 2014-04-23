@@ -107,7 +107,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         Collections.sort(result, new Comparator<DynamicType>() {
             @Override
             public int compare(DynamicType o1, DynamicType o2) {
-                return o1.getElementKey().compareTo(o2.getElementKey());
+                return o1.getKey().compareTo(o2.getKey());
             }
         });
         return result.toArray(new DynamicType[result.size()]);
@@ -199,7 +199,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	{
 		List<Event> events = new ArrayList<>();
 		DynamicType dynamicType = allocatable.getClassification().getType();
-		List<AppointmentBlock> blocks = getReservationBlocks(allocatable, interval);
+		List<AppointmentBlock> blocks = getReservationBlocks(allocatable, interval, false);
 		for (AppointmentBlock block : blocks) 
 		{
 			Event event = createEvent(block, dynamicType, locale);
@@ -227,7 +227,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             List<Allocatable> allocatables = new ArrayList<Allocatable>();
             QueryModule facade = getQuery();
 			for (DynamicType typeKey : roomType) {
-				if ( type == null || typeKey.getElementKey().equals( type))
+				if ( type == null || typeKey.getKey().equals( type))
 				{
 	                ClassificationFilter filter = typeKey.newClassificationFilter();
 	                allocatables.addAll(Arrays.asList(facade.getAllocatables(filter.toArray())));
@@ -256,7 +256,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
                 }
                 Date endInterval =  requestedEnd != null ? requestedEnd:DateTools.fillDate(requestedStart); 
             	TimeInterval timeInverval = new TimeInterval( requestedStart, endInterval );
-				for (AppointmentBlock block : getReservationBlocks(allocatable, timeInverval)) {
+				for (AppointmentBlock block : getReservationBlocks(allocatable, timeInverval, true)) {
                     Date blockStart = new Date(block.getStart());
                     Date blockEnd = new Date(block.getEnd());
                     if (blockEnd.after(requestedStart)) {
@@ -292,7 +292,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	}
 	
 	private User getTerminalUser() throws EntityNotFoundException {
-		return (User) getClientFacade().getOperator().resolve(userid);
+		return getClientFacade().getOperator().resolve(userid, User.class);
 	}
 
 //	 public void printFreeAllocatable(String name, Date ende) throws IOException {
@@ -312,7 +312,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 
 
 		for (DynamicType dynamicType : resourceTypes) {
-		    String typeKey = dynamicType.getElementKey();
+		    String typeKey = dynamicType.getKey();
 		    ClassificationFilter filter = null;
 		    try {
 		        filter = getQuery().getDynamicType(typeKey).newClassificationFilter();
@@ -428,7 +428,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		Classification classification = allocatable.getClassification();
         DynamicType dynamicType = classification.getType();
         
-        String elementName = allocatable.isPerson() ? "person" : dynamicType.getElementKey();
+        String elementName = allocatable.isPerson() ? "person" : dynamicType.getKey();
 
         I18nBundle i18n = getI18n();
 		{
@@ -621,13 +621,10 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     private List<ResourceDescription> getResources(DynamicType dynamicType, Appointment appointment,Locale locale) throws EntityNotFoundException {
         List<ResourceDescription> resources = new ArrayList<ResourceDescription>();
     	Reservation reservation = appointment.getReservation();
-        boolean isKurs = isCourse(dynamicType);
-        boolean isRaum = isRoom(dynamicType);
         for (Allocatable alloc : reservation.getAllocatablesFor(appointment)) {
-            DynamicType type = alloc.getClassification().getType();
+            //DynamicType type = alloc.getClassification().getType();
             //String elementKey = type.getElementKey();
-            // FIXME as a requirement this should be uncommented
-            if ((!isKurs && isCourse(type)) || (!isRaum && isRoom(type)))
+            //if ((!isKurs && isCourse(type)) || (!isRaum && isRoom(type)))
             {
             	ResourceDescription descriptor = getAllocatableNameIfReadable(alloc,locale);
             	if ( descriptor != null)
@@ -640,17 +637,17 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     }
 
     private List<AppointmentBlock> getReservationBlocks(Allocatable allocatable, Date date) throws RaplaException {
-        return getReservationBlocks(allocatable,  new TimeInterval( date, DateTools.addDay(date)) );
+        return getReservationBlocks(allocatable,  new TimeInterval( date, DateTools.addDay(date)), false );
     }
 
-	private List<AppointmentBlock> getReservationBlocks(Allocatable allocatable,TimeInterval interval) throws RaplaException {
+	private List<AppointmentBlock> getReservationBlocks(Allocatable allocatable,TimeInterval interval, boolean includeAllEvents) throws RaplaException {
         QueryModule facade = getQuery();
 		List<AppointmentBlock> array = new ArrayList<AppointmentBlock>();
         Date start = interval.getStart();
 		Date end = interval.getEnd();
 		Reservation[] reservations = facade.getReservations(new Allocatable[]{allocatable}, start, end);
         for (Reservation res : reservations) {
-        	if (isReservationTypeAllowed(res))
+        	if (includeAllEvents || isReservationTypeAllowed(res))
         	{
                 for (Appointment app : res.getAppointmentsFor(allocatable)) {
                 	Date appStart = start != null ? start : app.getStart();
