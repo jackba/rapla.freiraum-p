@@ -233,12 +233,12 @@ public class TerminalOption extends DefaultPluginOption {
         }
         {
             DefaultConfiguration conf = new DefaultConfiguration(TerminalConstants.ROOM_KEY);
-            conf.setValue(((DynamicType) raumTyp.getSelectedItem()).getElementKey());
+            conf.setValue(((DynamicType) raumTyp.getSelectedItem()).getKey());
             newConfig.addChild(conf);
         }
         {
             DefaultConfiguration conf = new DefaultConfiguration(TerminalConstants.KURS_KEY);
-            conf.setValue(((DynamicType) kursTyp.getSelectedItem()).getElementKey());
+            conf.setValue(((DynamicType) kursTyp.getSelectedItem()).getKey());
             newConfig.addChild(conf);
         }
         {
@@ -254,7 +254,7 @@ public class TerminalOption extends DefaultPluginOption {
         StringBuilder b = new StringBuilder();
         for (int i = 0, selectedValuesListSize = selectedValuesList.size(); i < selectedValuesListSize; i++) {
             Object o = selectedValuesList.get(i);
-            b.append(((DynamicType) o).getElementKey());
+            b.append(((DynamicType) o).getKey());
             if (i < selectedValuesListSize - 1)
                 b.append(",");
         }
@@ -367,7 +367,7 @@ public class TerminalOption extends DefaultPluginOption {
         ComboBoxModel model = comboBox.getModel();
         for (int i = 0; i < model.getSize(); i++) {
             DynamicType d = (DynamicType) comboBox.getModel().getElementAt(i);
-            if (d.getElementKey().equals(value)) {
+            if (d.getKey().equals(value)) {
                 comboBox.setSelectedItem(d);
                 break;
             }
@@ -391,7 +391,7 @@ public class TerminalOption extends DefaultPluginOption {
         final ListModel model = list.getModel();
         for (int i = 0; i < model.getSize(); i++) {
             DynamicType d = (DynamicType) model.getElementAt(i);
-            if (Arrays.binarySearch(keys, d.getElementKey()) >= 0) {
+            if (Arrays.binarySearch(keys, d.getKey()) >= 0) {
                 list.getSelectionModel().addSelectionInterval(i, i);
             }
         }
