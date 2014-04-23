@@ -76,7 +76,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 	//				int indexOf = a.lastIndexOf("/rapla");
 	//				String linkPrefix = a.substring(0, indexOf);
 					String linkPrefix = "http://localhost:8051/rapla";
-					Allocatable allocatable = (Allocatable)resolver.resolve( resourceId);
+					Allocatable allocatable = resolver.resolve( resourceId, Allocatable.class);
 					Locale locale = getLocale(language); 
 					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix, locale);
 					if ( detail != null)
@@ -144,7 +144,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 					}
 					Locale locale = getLocale(language); 
 					TimeInterval interval = createInterval(start, end);
-					Allocatable allocatable = (Allocatable)resolver.resolve( resourceId);
+					Allocatable allocatable = resolver.resolve( resourceId, Allocatable.class);
 					List<Event> result = exporter.getEvents(allocatable, interval,  locale);
 					return new ResultImpl<List<Event>>(result);
 				}
@@ -205,7 +205,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 				Category category = null;
 				if ( categoryId != null && !categoryId.trim().isEmpty())
 				{
-					category = (Category)resolver.resolve( categoryId);
+					category = resolver.resolve( categoryId, Category.class);
 				}
 				return category;
 			}
