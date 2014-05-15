@@ -10,7 +10,7 @@
  | program with every library, which license fulfills the Open Source       |
  | Definition as published by the Open Source Initiative (OSI).             |
  *--------------------------------------------------------------------------*/
-package org.rapla.plugin.freiraum;
+package org.rapla.plugin.freiraum.client;
 
 import java.awt.BorderLayout;
 import java.net.MalformedURLException;
@@ -43,6 +43,8 @@ import org.rapla.framework.RaplaException;
 import org.rapla.framework.StartupEnvironment;
 import org.rapla.gui.DefaultPluginOption;
 import org.rapla.gui.internal.common.NamedListCellRenderer;
+import org.rapla.plugin.freiraum.FreiraumPlugin;
+import org.rapla.plugin.freiraum.TerminalConstants;
 
 public class TerminalOption extends DefaultPluginOption {
     JTextField textField1;

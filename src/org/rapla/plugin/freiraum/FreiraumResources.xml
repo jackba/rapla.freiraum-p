@@ -5,4 +5,12 @@
         <text lang="en">info</text>
         <text lang="de">Info</text>
     </entry>
+    <entry key="image.url">
+        <text lang="en">Image URL</text>
+        <text lang="de">Image URL</text>
+    </entry>
+    <entry key="location.url">
+        <text lang="en">Location URL</text>
+        <text lang="de">Lageplan URL</text>
+    </entry>
 </resources>

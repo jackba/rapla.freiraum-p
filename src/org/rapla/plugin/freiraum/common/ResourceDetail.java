@@ -2,26 +2,31 @@ package org.rapla.plugin.freiraum.common;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ResourceDetail {
 	Map<String,ResourceDetailRow> attributeMap;
-	List<Event> events;
+	Map<String,ResourceDescription> resourceLinks;
+	
 	public ResourceDetail() 
 	{
 		attributeMap = new LinkedHashMap<String,ResourceDetailRow>();
 	}
 
-	public ResourceDetail(Map<String,ResourceDetailRow> map, List<Event> events) 
+	public ResourceDetail(Map<String,ResourceDetailRow> map,Map<String,ResourceDescription> resourceLinks) 
 	{
 		this.attributeMap = map;
-		this.events = events;
+		this.resourceLinks = resourceLinks;
 	}
 
 	public ResourceDetailRow getRow(String key)
 	{
 		return attributeMap.get( key);
+	}
+	
+	public Map<String,ResourceDescription> getResourceLinks()
+	{
+	    return resourceLinks;
 	}
 	
 	public Collection<String> getKeys() 
@@ -31,13 +36,7 @@ public class ResourceDetail {
 	
 	public String toString()
 	{
-		return attributeMap.toString() + " " + events.toString();
+		return attributeMap.toString();
 	}
 	
-	/** @deprecated use RaplaJsonService.getEvents() instead and pass currentTime and date as start and the currentDate and 21:00 as end   */
-	@Deprecated 
-	public List<Event> getEvents() 
-	{
-		return events;
-	}
 }

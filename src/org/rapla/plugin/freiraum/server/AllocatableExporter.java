@@ -32,6 +32,10 @@ import org.rapla.entities.dynamictype.Attribute;
 import org.rapla.entities.dynamictype.Classification;
 import org.rapla.entities.dynamictype.ClassificationFilter;
 import org.rapla.entities.dynamictype.DynamicType;
+import org.rapla.entities.dynamictype.internal.ClassificationImpl;
+import org.rapla.entities.dynamictype.internal.DynamicTypeImpl;
+import org.rapla.entities.dynamictype.internal.ParsedText;
+import org.rapla.entities.dynamictype.internal.ParsedText.EvalContext;
 import org.rapla.facade.QueryModule;
 import org.rapla.facade.RaplaComponent;
 import org.rapla.framework.Configuration;
@@ -198,11 +202,10 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	public List<Event> getEvents(Allocatable allocatable,TimeInterval interval,Locale locale) throws RaplaException
 	{
 		List<Event> events = new ArrayList<>();
-		DynamicType dynamicType = allocatable.getClassification().getType();
 		List<AppointmentBlock> blocks = getReservationBlocks(allocatable, interval, false);
 		for (AppointmentBlock block : blocks) 
 		{
-			Event event = createEvent(block, dynamicType, locale);
+			Event event = createEvent(block, locale);
             events.add( event );
 		}
 		return events;
@@ -425,7 +428,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 		boolean exportReservations = allocatable.canRead(stele);
 		Map<String, ResourceDetailRow> attributes = new LinkedHashMap<String, ResourceDetailRow>();
 		
-		Classification classification = allocatable.getClassification();
+		final Classification classification = allocatable.getClassification();
         DynamicType dynamicType = classification.getType();
         
         String elementName = allocatable.isPerson() ? "person" : dynamicType.getKey();
@@ -454,21 +457,83 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         printAttributeIfThere(attributes, classification,  "abteilung", locale);
 
         printAttributeIfThere(attributes,classification,  "email", locale);
-        printAttributeIfThere(attributes,classification,  "bild", locale);
+        {
+            ParsedText parsedAnnotation = ((DynamicTypeImpl)dynamicType).getParsedAnnotation(TerminalConstants.IMAGE_URL_FORMAT_ANNOTATION);
+            if (parsedAnnotation != null)
+            {
+                String label ="image";
+                EvalContext evalContext = new EvalContext(locale)
+                {
+                    public Classification getClassification()
+                    {
+                        return classification;
+                    }
+                };
+                Object value = parsedAnnotation.formatName(evalContext);
+                ResourceDetailRow row  = printOnLine( label, value, locale);
+                if (row != null)
+                {
+                    attributes.put( "bild", row);
+                }
+            }
+            else
+            {
+                printAttributeIfThere(attributes,classification,  "bild", locale);
+            }
+        }
+        {
+            ParsedText parsedAnnotation = ((DynamicTypeImpl)dynamicType).getParsedAnnotation(TerminalConstants.LOCATION_URL_FORMAT_ANNOTATION);
+            if (parsedAnnotation != null)
+            {
+                String label ="location";
+                EvalContext evalContext = new EvalContext(locale)
+                {
+                    public Classification getClassification()
+                    {
+                        return classification;
+                    }
+                };
+                Object value = parsedAnnotation.formatName(evalContext);
+                ResourceDetailRow row  = printOnLine( label, value, locale);
+                if (row != null)
+                {
+                    attributes.put( "location", row);
+                }
+            }
+        }
         printAttributeIfThere(attributes,classification,  "telefon", locale);
         printAttributeIfThere(attributes,classification,  "raumart", locale);
         for (int i = 0; i < 10; i++)
             printAttributeIfThere(attributes,classification, "zeile" + i, locale);
 
 
-    	Attribute attribute = classification.getAttribute("raum");
-    	if ( attribute != null)
-    	{
-    		String roomName = getRoomName(classification, true, true,locale);
-    		String roomLabel = attribute.getName(locale);
-    		attributes.put("raumnr",printOnLine( roomLabel, roomName, locale));
-    	}
-    	if (exportReservations ) 
+        Map<String, ResourceDescription> resourceLinks = new LinkedHashMap<String,ResourceDescription>();
+        {
+        	Attribute attribute = classification.getAttribute("raum");
+        	if ( attribute != null)
+        	{
+        		String roomName = getRoomName(classification, true, true,locale);
+        		String roomLabel = attribute.getName(locale);
+        		attributes.put("raumnr",printOnLine( roomLabel, roomName, locale));
+        	}
+        }
+        {
+            Attribute attribute = classification.getAttribute("raumnummer");
+            if ( attribute != null)
+            {
+                Object value = classification.getValue( attribute );
+                if ( value != null && value instanceof Allocatable)
+                {
+                    Allocatable alloc = (Allocatable) value;
+                    ResourceDescription descriptor = getAllocatableNameIfReadable(alloc,locale);
+                    if ( descriptor != null)
+                    {
+                        resourceLinks.put("raum",descriptor);
+                    }
+                }
+            }
+        }
+        if (exportReservations ) 
         {
             String attributeName = "resourceURL";
             String id = allocatable.getId();
@@ -499,23 +564,14 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             printAttributeIfThere(attributes,classification, "info", locale);
         } 
         
-    	List<Event> events = new ArrayList<Event>();
-    	Date today = getQuery().today();
-    	List<AppointmentBlock> blocks = getReservationBlocks(allocatable, today);
-    	if (exportReservations) {
-            for (AppointmentBlock block : blocks) {
-                Event event = createEvent(block, dynamicType, locale);
-                events.add( event );
-            }
-        } 
-        
-        ResourceDetail result = new ResourceDetail(attributes, events);
+  
+        ResourceDetail result = new ResourceDetail(attributes, resourceLinks);
 		return result;
 	}
 
-	public Event createEvent(AppointmentBlock block, DynamicType dynamicType,Locale locale) throws EntityNotFoundException {
+	public Event createEvent(AppointmentBlock block,Locale locale) throws EntityNotFoundException {
 		Appointment appointment = block.getAppointment();
-		List<ResourceDescription> resources = getResources(dynamicType, appointment,locale);
+		List<ResourceDescription> resources = getResources( appointment,locale);
 		Reservation reservation = appointment.getReservation();
 		String startDate = raplaLocale.formatDate(new Date(block.getStart()));
 		String start = raplaLocale.formatTime(new Date(block.getStart()));
@@ -596,7 +652,6 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     	return new ResourceDetailRow( label, string);
     }
 
-
     public String getRoomName(Classification classification, boolean fluegel, boolean validFilename, Locale locale) {
         Category superCategory = getQuery().getSuperCategory();
         StringBuffer buf = new StringBuffer();
@@ -617,8 +672,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
         return validFilename ? result.replaceAll("[-,\\,/,\\s,\\,,:]*", "") : result;
     }
 
-
-    private List<ResourceDescription> getResources(DynamicType dynamicType, Appointment appointment,Locale locale) throws EntityNotFoundException {
+    private List<ResourceDescription> getResources(Appointment appointment,Locale locale) throws EntityNotFoundException {
         List<ResourceDescription> resources = new ArrayList<ResourceDescription>();
     	Reservation reservation = appointment.getReservation();
         for (Allocatable alloc : reservation.getAllocatablesFor(appointment)) {

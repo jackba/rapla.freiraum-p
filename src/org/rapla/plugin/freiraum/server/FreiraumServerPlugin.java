@@ -12,9 +12,19 @@
  *--------------------------------------------------------------------------*/
 package org.rapla.plugin.freiraum.server;
 import org.rapla.components.xmlbundle.impl.I18nBundleImpl;
+import org.rapla.entities.Category;
+import org.rapla.entities.EntityNotFoundException;
+import org.rapla.entities.domain.Allocatable;
+import org.rapla.entities.domain.Permission;
+import org.rapla.entities.dynamictype.Attribute;
+import org.rapla.entities.dynamictype.Classification;
+import org.rapla.entities.dynamictype.ClassificationFilter;
+import org.rapla.entities.dynamictype.DynamicType;
+import org.rapla.facade.ClientFacade;
 import org.rapla.framework.Configuration;
 import org.rapla.framework.PluginDescriptor;
 import org.rapla.framework.RaplaContextException;
+import org.rapla.framework.RaplaException;
 import org.rapla.framework.logger.Logger;
 import org.rapla.plugin.freiraum.FreiraumPlugin;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
@@ -71,6 +81,69 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
 //        } catch ( Exception ex) {
 //        	getLogger().error("Could not initialize terminal plugin on server" , ex);
 //        }
+    	ClientFacade facade = container.getContext().lookup(ClientFacade.class);
+    	try {
+            convertOldDhbwData(facade);
+        } catch (RaplaException e) {
+            throw new RaplaContextException( e.getMessage(), e);
+        }
+    }
+    
+    static public void convertOldDhbwData(ClientFacade facade) throws RaplaException {
+        DynamicType dynamicType;
+        try
+        {
+            dynamicType = facade.getDynamicType("raum");
+            Allocatable[] allocatables = facade.getAllocatables();
+            for (Allocatable allocatable:allocatables)
+            {
+                Classification classification = allocatable.getClassification();
+                Attribute raumAtt = classification.getAttribute("raum");
+                String newRaumKey = "raumnummer";
+                Attribute raumAttNew = classification.getAttribute(newRaumKey);
+                if ( raumAtt != null && raumAttNew != null)
+                {
+                    Object newValue = classification.getValue( raumAttNew ); 
+                    Object value = classification.getValue(raumAtt);
+                    if ( newValue == null && value != null && value instanceof Category)
+                    {
+                       // String raumKey = ((Category)value).getKey();
+                        ClassificationFilter filter = dynamicType.newClassificationFilter();
+                        filter.addEqualsRule("raum",value);
+                        Allocatable[] foundRooms = facade.getAllocatables( filter.toArray());
+                        Allocatable room;
+                        if ( foundRooms.length>0)
+                        {
+                            room = foundRooms[0];
+                        }
+                        else
+                        {
+                            Classification newClassification = dynamicType.newClassification(true);
+                            newClassification.setValue("raum", value);
+                            room  = facade.newAllocatable(newClassification, null);
+                            Permission[] permissions = room.getPermissions();
+                            if ( permissions.length > 0)
+                            {
+                                permissions[0].setAccessLevel(Permission.READ_ONLY_INFORMATION);
+                            }
+                            else
+                            {
+                                Permission permission = room.newPermission();
+                                permission.setAccessLevel( Permission.READ_ONLY_INFORMATION);
+                                room.addPermission( permission );
+                            }
+                            facade.store( room );
+                        }
+                        Allocatable editable = facade.edit( allocatable);
+                        editable.getClassification().setValue(newRaumKey , room);
+                        facade.store( editable);
+    
+                    }
+                }
+            }
+        } catch (EntityNotFoundException ex)
+        {
+        }
     }
 
 }

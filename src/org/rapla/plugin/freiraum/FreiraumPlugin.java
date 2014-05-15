@@ -14,9 +14,14 @@ package org.rapla.plugin.freiraum;
 import org.rapla.client.ClientServiceContainer;
 import org.rapla.client.RaplaClientExtensionPoints;
 import org.rapla.components.xmlbundle.I18nBundle;
+import org.rapla.components.xmlbundle.impl.I18nBundleImpl;
 import org.rapla.framework.Configuration;
 import org.rapla.framework.PluginDescriptor;
 import org.rapla.framework.TypedComponentRole;
+import org.rapla.gui.AnnotationEditExtension;
+import org.rapla.plugin.freiraum.client.ImageURLAnnotationEdit;
+import org.rapla.plugin.freiraum.client.LocationURLAnnotationEdit;
+import org.rapla.plugin.freiraum.client.TerminalOption;
 
 /**
    This is a demonstration of a rapla-plugin. It adds a sample usecase and option
@@ -33,8 +38,12 @@ public class FreiraumPlugin
 
     public void provideServices(ClientServiceContainer container, Configuration config) {
         container.addContainerProvidedComponent(RaplaClientExtensionPoints.PLUGIN_OPTION_PANEL_EXTENSION, TerminalOption.class);
+        container.addContainerProvidedComponent( RESOURCE_FILE, I18nBundleImpl.class, I18nBundleImpl.createConfig(RESOURCE_FILE.getId()));
     	if ( !config.getAttributeAsBoolean("enabled", ENABLE_BY_DEFAULT) )
         	return;
+    	container.addContainerProvidedComponent(AnnotationEditExtension.DYNAMICTYPE_ANNOTATION_EDIT, ImageURLAnnotationEdit.class);
+        container.addContainerProvidedComponent(AnnotationEditExtension.DYNAMICTYPE_ANNOTATION_EDIT, LocationURLAnnotationEdit.class);
+
     }
 
 }
