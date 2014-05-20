@@ -40,6 +40,10 @@ public class Event
 	public String getEnd() {
 		return end;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
 	public List<ResourceDescription> getResources() {
 		return resources;
