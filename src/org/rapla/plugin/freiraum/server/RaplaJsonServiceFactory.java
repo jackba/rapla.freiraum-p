@@ -75,7 +75,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 	//				StringBuffer a = request.getRequestURL();
 	//				int indexOf = a.lastIndexOf("/rapla");
 	//				String linkPrefix = a.substring(0, indexOf);
-					String linkPrefix = "http://localhost:8051/rapla";
+					String linkPrefix = "rapla";
 					Allocatable allocatable = resolver.resolve( resourceId, Allocatable.class);
 					Locale locale = getLocale(language); 
 					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix, locale);
