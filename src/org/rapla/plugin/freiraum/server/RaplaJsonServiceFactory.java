@@ -25,6 +25,7 @@ import org.rapla.plugin.freiraum.common.Event;
 import org.rapla.plugin.freiraum.common.RaplaJsonService;
 import org.rapla.plugin.freiraum.common.ResourceDescription;
 import org.rapla.plugin.freiraum.common.ResourceDetail;
+import org.rapla.plugin.urlencryption.UrlEncryption;
 import org.rapla.rest.gwtjsonrpc.common.FutureResult;
 import org.rapla.rest.gwtjsonrpc.common.ResultImpl;
 import org.rapla.server.RemoteMethodFactory;
@@ -75,7 +76,7 @@ public class RaplaJsonServiceFactory extends RaplaComponent implements RemoteMet
 	//				StringBuffer a = request.getRequestURL();
 	//				int indexOf = a.lastIndexOf("/rapla");
 	//				String linkPrefix = a.substring(0, indexOf);
-					String linkPrefix = "rapla";
+					String linkPrefix = ".";
 					Allocatable allocatable = resolver.resolve( resourceId, Allocatable.class);
 					Locale locale = getLocale(language); 
 					ResourceDetail detail = exporter.getAllocatable(allocatable, linkPrefix, locale);

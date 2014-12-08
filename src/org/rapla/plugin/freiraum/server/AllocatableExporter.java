@@ -32,7 +32,6 @@ import org.rapla.entities.dynamictype.Attribute;
 import org.rapla.entities.dynamictype.Classification;
 import org.rapla.entities.dynamictype.ClassificationFilter;
 import org.rapla.entities.dynamictype.DynamicType;
-import org.rapla.entities.dynamictype.internal.ClassificationImpl;
 import org.rapla.entities.dynamictype.internal.DynamicTypeImpl;
 import org.rapla.entities.dynamictype.internal.ParsedText;
 import org.rapla.entities.dynamictype.internal.ParsedText.EvalContext;
@@ -48,6 +47,8 @@ import org.rapla.plugin.freiraum.common.Event;
 import org.rapla.plugin.freiraum.common.ResourceDescription;
 import org.rapla.plugin.freiraum.common.ResourceDetail;
 import org.rapla.plugin.freiraum.common.ResourceDetailRow;
+import org.rapla.plugin.urlencryption.UrlEncryption;
+import org.rapla.storage.StorageOperator;
 
 public class AllocatableExporter extends RaplaComponent implements TerminalConstants {
 
@@ -61,9 +62,15 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
     //User stele;
 	String userid;
     Configuration config;
+    private UrlEncryption encryptionservice;
     
     public AllocatableExporter(RaplaContext context, Configuration config) throws RaplaException {
     	super(context);
+    	if (context.has(UrlEncryption.class))
+        {
+    	    encryptionservice = context.lookup(UrlEncryption.class);
+        }
+        
     	this.config = config;
     	raplaLocale = getRaplaLocale();
         dateTimeFormat = new SerializableDateTimeFormat();
@@ -538,8 +545,8 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
             String attributeName = "resourceURL";
             String id = allocatable.getId();
             String pageParameters = "page=calendar&user=" + stele.getUsername() + "&file=" + elementName + "&allocatable_id=" + id;
-//                String encryptedParamters = encryptionservice != null ?  UrlEncryption.ENCRYPTED_PARAMETER_NAME + "=" + encryptionservice.encrypt(pageParameters) : pageParameters;
-            String encryptedParamters = pageParameters;
+            String encryptedParamters = encryptionservice != null ?  UrlEncryption.ENCRYPTED_PARAMETER_NAME + "=" + encryptionservice.encrypt(pageParameters) : pageParameters;
+            //String encryptedParamters = pageParameters;
             String url = linkPrefix + "/rapla?" + encryptedParamters;
             String label;
             if (allocatable.isPerson())
@@ -608,9 +615,8 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	private boolean isReservationTypeAllowed(Reservation res) throws EntityNotFoundException {
 		if (Arrays.binarySearch(eventTypes, res.getClassification().getType()) <0)
 			return false;
-		boolean canReadReservationsFromOthers = true;
 		User stele = getTerminalUser();
-		return canRead(res, stele, canReadReservationsFromOthers);
+		return canRead(res, stele, getEntityResolver() );
 	}
 
 
@@ -663,6 +669,22 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
                 if (!fluegel || parent.getParent().equals(superCategory))
                     parent = null;
                 buf.append(parent != null ? parent.getName(locale) : "").append(category.getKey().replace((parent != null ? parent.getName(locale) : ""), ""));
+            } else if (raum instanceof Allocatable){
+                Classification classificationRoom = ((Allocatable) raum).getClassification();
+                Object value = classificationRoom.getValue("raum");
+                if (value != null && value instanceof Category)
+                {
+                    Category category = (Category) value;
+                    Category parent = category.getParent();
+                    if (!fluegel || parent.getParent().equals(superCategory))
+                        parent = null;
+                    buf.append(parent != null ? parent.getName(locale) : "").append(category.getKey().replace((parent != null ? parent.getName(locale) : ""), ""));
+                    
+                }
+                else
+                {
+                    buf.append(((Allocatable)raum).getName(locale));
+                }
             } else {
                 if (raum != null)
                     buf.append(raum.toString());

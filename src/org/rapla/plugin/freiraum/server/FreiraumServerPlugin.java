@@ -11,6 +11,9 @@
  | Definition as published by the Open Source Initiative (OSI).             |
  *--------------------------------------------------------------------------*/
 package org.rapla.plugin.freiraum.server;
+import java.util.Collection;
+import java.util.Locale;
+
 import org.rapla.components.xmlbundle.impl.I18nBundleImpl;
 import org.rapla.entities.Category;
 import org.rapla.entities.EntityNotFoundException;
@@ -60,7 +63,7 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
     	container.addContainerProvidedComponent(FreiraumPlugin.RESOURCE_FILE, I18nBundleImpl.class, I18nBundleImpl.createConfig(FreiraumPlugin.RESOURCE_FILE.getId()));
     	container.addWebpage("freiraum-ajax",FreiraumExportPageGenerator.class, config  );
 		container.addRemoteMethodFactory(RaplaJsonService.class, RaplaJsonServiceFactory.class,config);
-    	container.addContainerProvidedComponent( RaplaServerExtensionPoints.HTML_MAIN_MENU_EXTENSION_POINT, FreiraumMenuEntry.class);
+    	//container.addContainerProvidedComponent( RaplaServerExtensionPoints.HTML_MAIN_MENU_EXTENSION_POINT, FreiraumMenuEntry.class);
     	//container.addWebpage("freiraum-push",FreiraumPushPageGenerator.class, config  );
     	//container.addWebpage("freiraum-poll",FreiraumPollPageGenerator.class, config  );
     	
@@ -89,7 +92,8 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
         }
     }
     
-    static public void convertOldDhbwData(ClientFacade facade) throws RaplaException {
+    
+    public void convertOldDhbwData(ClientFacade facade) throws RaplaException {
         DynamicType dynamicType;
         try
         {
@@ -107,42 +111,73 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
                     Object value = classification.getValue(raumAtt);
                     if ( newValue == null && value != null && value instanceof Category)
                     {
-                       // String raumKey = ((Category)value).getKey();
-                        ClassificationFilter filter = dynamicType.newClassificationFilter();
-                        filter.addEqualsRule("raum",value);
-                        Allocatable[] foundRooms = facade.getAllocatables( filter.toArray());
-                        Allocatable room;
-                        if ( foundRooms.length>0)
+                        if ( classification.getType().getKey().equals("raum"))
                         {
-                            room = foundRooms[0];
+                            Allocatable editable = facade.edit( allocatable);
+                            String roomName = getRoomName(value);
+                            editable.getClassification().setValue(newRaumKey , roomName);
+                            facade.store( editable);
+                            getLogger().info("Updating resoure to new room name " + editable);
                         }
                         else
                         {
-                            Classification newClassification = dynamicType.newClassification(true);
-                            newClassification.setValue("raum", value);
-                            room  = facade.newAllocatable(newClassification, null);
-                            Permission[] permissions = room.getPermissions();
-                            if ( permissions.length > 0)
+                            // String raumKey = ((Category)value).getKey();
+                            ClassificationFilter filter = dynamicType.newClassificationFilter();
+                            filter.addEqualsRule("raum",value);
+                            Allocatable[] foundRooms = facade.getAllocatables( filter.toArray());
+                            Allocatable room;
+                            if ( foundRooms.length>0)
                             {
-                                permissions[0].setAccessLevel(Permission.READ_ONLY_INFORMATION);
+                                room = foundRooms[0];
                             }
                             else
                             {
-                                Permission permission = room.newPermission();
-                                permission.setAccessLevel( Permission.READ_ONLY_INFORMATION);
-                                room.addPermission( permission );
+                                Classification newClassification = dynamicType.newClassification(true);
+                                String roomName = getRoomName(value);
+                                newClassification.setValue("raum", roomName);
+                                getLogger().info("Creating resource " + roomName);
+                                room  = facade.newAllocatable(newClassification, null);
+                                Collection<Permission> permissions = room.getPermissionList();
+                                if ( permissions.size() > 0)
+                                {
+                                    permissions.iterator().next().setAccessLevel(Permission.READ);
+                                }
+                                else
+                                {
+                                    Permission permission = room.newPermission();
+                                    permission.setAccessLevel( Permission.READ);
+                                    room.addPermission( permission );
+                                }
+                                facade.store( room );
                             }
-                            facade.store( room );
+                            Allocatable editable = facade.edit( allocatable);
+                            editable.getClassification().setValue(newRaumKey , room);
+                            facade.store( editable);
+                            getLogger().info("Updating resoure to new room link " + editable);
                         }
-                        Allocatable editable = facade.edit( allocatable);
-                        editable.getClassification().setValue(newRaumKey , room);
-                        facade.store( editable);
-    
                     }
                 }
             }
         } catch (EntityNotFoundException ex)
         {
+        }
+    }
+
+    private String getRoomName(Object value) {
+        Locale locale = Locale.GERMANY;
+        if (value instanceof Category)
+        {
+            Category category = (Category) value;
+            Category parent = category.getParent();
+            StringBuilder buf = new StringBuilder();
+            buf.append(parent != null ? parent.getName(locale) : "").append(category.getKey().replace((parent != null ? parent.getName(locale) : ""), ""));
+            return buf.toString();
+        }
+        else
+        {
+           
+            String string = value.toString();
+            return string;
         }
     }
 
