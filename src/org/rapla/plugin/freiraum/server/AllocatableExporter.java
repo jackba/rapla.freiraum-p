@@ -208,7 +208,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	
 	public List<Event> getEvents(Allocatable allocatable,TimeInterval interval,Locale locale) throws RaplaException
 	{
-		List<Event> events = new ArrayList<>();
+		List<Event> events = new ArrayList<Event>();
 		List<AppointmentBlock> blocks = getReservationBlocks(allocatable, interval, false);
 		for (AppointmentBlock block : blocks) 
 		{
@@ -220,7 +220,7 @@ public class AllocatableExporter extends RaplaComponent implements TerminalConst
 	
 	public List<Event> getFreeRooms(TimeInterval interval,String type,Locale locale) throws RaplaException
 	{
-		List<Event> result = new ArrayList<>();
+		List<Event> result = new ArrayList<Event>();
 		int maxFreeAllocatables = 99;
         //testbetrieb
         /* {

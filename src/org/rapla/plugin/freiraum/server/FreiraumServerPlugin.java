@@ -57,10 +57,10 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
      */
     public void provideServices(ServerServiceContainer container, Configuration config) throws RaplaContextException {
     	// add freiraum even if config not set
-//        if ( !config.getAttributeAsBoolean("enabled", true) )
-//        	return;
+        if ( !config.getAttributeAsBoolean("enabled", true) )
+        	return;
 
-    	container.addContainerProvidedComponent(FreiraumPlugin.RESOURCE_FILE, I18nBundleImpl.class, I18nBundleImpl.createConfig(FreiraumPlugin.RESOURCE_FILE.getId()));
+    	container.addResourceFile(FreiraumPlugin.RESOURCE_FILE);
     	container.addWebpage("freiraum-ajax",FreiraumExportPageGenerator.class, config  );
 		container.addRemoteMethodFactory(RaplaJsonService.class, RaplaJsonServiceFactory.class,config);
     	//container.addContainerProvidedComponent( RaplaServerExtensionPoints.HTML_MAIN_MENU_EXTENSION_POINT, FreiraumMenuEntry.class);
@@ -84,12 +84,12 @@ public class FreiraumServerPlugin implements PluginDescriptor<ServerServiceConta
 //        } catch ( Exception ex) {
 //        	getLogger().error("Could not initialize terminal plugin on server" , ex);
 //        }
-    	ClientFacade facade = container.getContext().lookup(ClientFacade.class);
-    	try {
-            convertOldDhbwData(facade);
-        } catch (RaplaException e) {
-            throw new RaplaContextException( e.getMessage(), e);
-        }
+//    	ClientFacade facade = container.getContext().lookup(ClientFacade.class);
+//    	try {
+//            convertOldDhbwData(facade);
+//        } catch (RaplaException e) {
+//            throw new RaplaContextException( e.getMessage(), e);
+//        }
     }
     
     

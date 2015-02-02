@@ -76,28 +76,28 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 		}
 
 		/*
-		//Prüfung, ob die Anfragezeit noch erlaubt ist. Die Zeitspanne für Zukunft und Vergangenheit kann in der Konfigurationsdatei geändert werden
-		//weiterhin prüfen, ob die query die roomfree query ist. dann soll das zeitlimit nicht gelten!
+		//Pruefung, ob die Anfragezeit noch erlaubt ist. Die Zeitspanne fuer Zukunft und Vergangenheit kann in der Konfigurationsdatei geaendert werden
+		//weiterhin pruefen, ob die query die roomfree query ist. dann soll das zeitlimit nicht gelten!
 		if ($query != "roomfree" && ($start > $tag_anfang+ CALENDAR_DAYS_FUTURE*SECS_PER_DAY || $dayOffset > CALENDAR_DAYS_FUTURE)){	
-			$json = createJson(array(JSON_ATTRIBUTE_DATA => null, "error" =>"Der gewählte Tag liegt zu weit in der Zukunft. Es sind maximal ".CALENDAR_DAYS_FUTURE." Tage erlaubt." ));
+			$json = createJson(array(JSON_ATTRIBUTE_DATA => null, "error" =>"Der gewaehlte Tag liegt zu weit in der Zukunft. Es sind maximal ".CALENDAR_DAYS_FUTURE." Tage erlaubt." ));
 			echo $json;
 			exit();
 		}
 
-		//Prüfung ob Termine in der Vergangenheit noch erlaubt sind
-		//weiterhin prüfen, ob die query die roomfree query ist. dann soll das zeitlimit nicht gelten!
+		//Pruefung ob Termine in der Vergangenheit noch erlaubt sind
+		//weiterhin pruefen, ob die query die roomfree query ist. dann soll das zeitlimit nicht gelten!
 		if ($query != "roomfree" && ($start < $tag_anfang-(CALENDAR_DAYS_PAST*SECS_PER_DAY)  || $dayOffset < CALENDAR_DAYS_PAST*(-1))){
-			$json = createJson(array(JSON_ATTRIBUTE_DATA => null, "error" => "Der gewählte Tag liegt in der Vergangenheit. Es sind maximal ".CALENDAR_DAYS_PAST." Tage erlaubt."));
+			$json = createJson(array(JSON_ATTRIBUTE_DATA => null, "error" => "Der gewaehlte Tag liegt in der Vergangenheit. Es sind maximal ".CALENDAR_DAYS_PAST." Tage erlaubt."));
 			echo $json;
 			exit();
 		}
 
 
 		if (!isset($duration)) $duration =  0;
-		//Offset-Berechnung für den Zeitraum der Termine. Ist der Offset 1, so wird der Anfang der Zeitspanne auf den Beginn des nächsten Tages gelegt
-		//Für dayOffset = 0 ergibt sich keine Änderung, da 0 hinzuaddiert wird
-		//Für dayOffset <= 0 wird der rechte Teil automatisch negativ und somit abgezogen
-		//Für dayOffset > 0 wird die passende Anzahl an Sekunden hinzuaddiert
+		//Offset-Berechnung fuer den Zeitraum der Termine. Ist der Offset 1, so wird der Anfang der Zeitspanne auf den Beginn des naechsten Tages gelegt
+		//Fuer dayOffset = 0 ergibt sich keine aenderung, da 0 hinzuaddiert wird
+		//Fuer dayOffset <= 0 wird der rechte Teil automatisch negativ und somit abgezogen
+		//Fuer dayOffset > 0 wird die passende Anzahl an Sekunden hinzuaddiert
 		$tag_anfang += SECS_PER_DAY * $dayOffset;
 		$tag_offset += SECS_PER_DAY * $dayOffset;
 		$tag_ende   += SECS_PER_DAY * $dayOffset;
@@ -112,10 +112,10 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 			//Die Termine eines Raumes sollen angefragt werden. Detaillierte Parameter sind in der Dokumentation unter Datenermittlung beschrieben
 			case "room":
 				try{
-					//Mit den RessourcenSchlüsseln für Räume DBKEY_ROOM_NAME und DBKEY_ROOM wird die ID des Raumes ermittelt
+					//Mit den RessourcenSchluesseln fuer Raeume DBKEY_ROOM_NAME und DBKEY_ROOM wird die ID des Raumes ermittelt
 					//$roomid = getResourceIdByName($name,DBKEY_ROOM_NAME,DBKEY_ROOM);
 					$roomid = $resourceId;
-					//Mit Hilfe der ID und den Timestamps des Zeitraums werden alle Termine der verschiedenen Terminarten ermittelt (Einzeltermine, wöchentliche Termine, Tägliche Termine)
+					//Mit Hilfe der ID und den Timestamps des Zeitraums werden alle Termine der verschiedenen Terminarten ermittelt (Einzeltermine, woechentliche Termine, Taegliche Termine)
 					$result = getAppointmentByResource($tag_anfang,$tag_ende,$roomid);
 					$data = "";
 					//Die ermittelten Ergebnisse werden in HTML-Tags eingebunden
@@ -126,17 +126,17 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 		    		echo $json;
 					return;
 				}
-				//Die formatierten Daten werden als JSON Objekt an den Client zurückgeliefert
+				//Die formatierten Daten werden als JSON Objekt an den Client zurueckgeliefert
 				$json = createJson(array(JSON_ATTRIBUTE_DATA => $data, JSON_ATTRIBUTE_ERROR => null));
 				echo $json;
 				break;
 			//Die Termine eines Kurses sollen angefragt werden. Detaillierte Parameter sind in der Dokumentation unter Datenermittlung beschrieben
 			case "course":
 				try{
-				//Mit den RessourcenSchlüsseln für Kurse DBKEY_COURSE_NAME und DBKEY_COURSE wird die ID des Kurses ermittelt
+				//Mit den RessourcenSchluesseln fuer Kurse DBKEY_COURSE_NAME und DBKEY_COURSE wird die ID des Kurses ermittelt
 				//$course_id = getResourceIdByName($name,DBKEY_COURSE_NAME,DBKEY_COURSE);
 				$course_id = $resourceId;
-				//Mit Hilfe der ID und den Timestamps des Zeitraums werden alle Termine der verschiedenen Terminarten ermittelt (Einzeltermine, wöchentliche Termine, Tägliche Termine)
+				//Mit Hilfe der ID und den Timestamps des Zeitraums werden alle Termine der verschiedenen Terminarten ermittelt (Einzeltermine, woechentliche Termine, Taegliche Termine)
 				$result = getAppointmentByResource($tag_anfang,$tag_ende,$course_id);		
 				$data = "";
 				//Die ermittelten Ergebnisse werden in HTML-Tags eingebunden
@@ -147,7 +147,7 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 		    		echo $json;
 					return;
 				}
-				//Die formatierten Daten werden als JSON Objekt an den Client zurückgeliefert		
+				//Die formatierten Daten werden als JSON Objekt an den Client zurueckgeliefert		
 				$json = createJson(array(JSON_ATTRIBUTE_DATA => $data, JSON_ATTRIBUTE_ERROR => null));
 				echo $json;
 				break;
@@ -161,7 +161,7 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				try{
 
 				//Mit Hilfe der ID, die in diesem Falle bereits als Parameter bereitgestellt wird und den Timestamps des Zeitraums 
-				//werden alle Termine der verschiedenen Terminarten ermittelt (Einzeltermine, wöchentliche Termine, Tägliche Termine)
+				//werden alle Termine der verschiedenen Terminarten ermittelt (Einzeltermine, woechentliche Termine, Taegliche Termine)
 				$result = getAppointmentByResource($tag_anfang,$tag_ende,$resourceId);
 				$data = "";
 				//Die ermittelten Ergebnisse werden in HTML-Tags eingebunden
@@ -172,26 +172,26 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 		    		echo $json;
 					return;
 				}
-				//Die formatierten Daten werden als JSON Objekt an den Client zurückgeliefert				
+				//Die formatierten Daten werden als JSON Objekt an den Client zurueckgeliefert				
 				$json = createJson(array(JSON_ATTRIBUTE_DATA => $data, JSON_ATTRIBUTE_ERROR => null));
 				echo $json;
 				break;
 				
-			//Alle freien Räume während eines bestimmten Zeitraums sind zu finden. Detaillierte Parameter sind in der Dokumentation unter Datenermittlung beschrieben		
+			//Alle freien Raeume waehrend eines bestimmten Zeitraums sind zu finden. Detaillierte Parameter sind in der Dokumentation unter Datenermittlung beschrieben		
 			case "roomfree":
 				try{
 				//Vorgehensweise: 1)Selektiere alle Appointments, die im Zielzeitraum (start bis start+duration) stattfinden
-				//2)Selektiere alle Räume, die von diesen Appointments verwendet werden
-				//3)Selektiere alle Räume, die nicht in der vorher ermittelten Menge enthalten sind --> fertig
-				//Bei den Terminen sind die verschiedenen Terminarten zu berücksichtigen (Einzeltermin, wöchtenlich, täglich)
+				//2)Selektiere alle Raeume, die von diesen Appointments verwendet werden
+				//3)Selektiere alle Raeume, die nicht in der vorher ermittelten Menge enthalten sind --> fertig
+				//Bei den Terminen sind die verschiedenen Terminarten zu beruecksichtigen (Einzeltermin, woechtenlich, taeglich)
 				
-				//Bestimmte Räume können mithilfe eines Filters ausgeschlossen werden
+				//Bestimmte Raeume koennen mithilfe eines Filters ausgeschlossen werden
 				$filterRooms = filterRooms();
 				
 				
 
-				//selektiere alle räume, die nicht ausgefiltert sind und erstelle eine Liste, um die Liste an getAppointmentByResource zu übergeben
-				//es sind 2 joins nötig, da 2 attribute name und kategorie nötig sind, diese aber jeweils in einer zeile der Tabelle ressource_attribute_value gespeichert sind
+				//selektiere alle raeume, die nicht ausgefiltert sind und erstelle eine Liste, um die Liste an getAppointmentByResource zu uebergeben
+				//es sind 2 joins noetig, da 2 attribute name und kategorie noetig sind, diese aber jeweils in einer zeile der Tabelle ressource_attribute_value gespeichert sind
 				$queryexec =  " select distinct(ID) from rapla_resource rr ";
 				$queryexec .= " inner join resource_attribute_value rav on (rr.ID = rav.RESOURCE_ID and rav.ATTRIBUTE_KEY = 'name') ";
 				$queryexec .= " inner join resource_attribute_value rav2 on (rr.ID = rav2.RESOURCE_ID and rav2.ATTRIBUTE_KEY = 'roomtype')";
@@ -221,14 +221,14 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				$listrooms = substr($listrooms, 0, -1);
 				
 				
-				//SONDERFALL: Es kann vorkommen, dass Räume im Filter stehen, diese aber nicht existieren. Dann würdeen die folgenden Queries einen Teil absetzen, der "... where id IN () " enthält.
-				//Die leere Klammer führt aber zu einem Fehler in SQL, da mindestens ein Argutment erwartet wird. Deshalb muss im Falle einer leeren $listrooms einfach 0 übergeben werden (Id 0 existiert nicht)
+				//SONDERFALL: Es kann vorkommen, dass Raeume im Filter stehen, diese aber nicht existieren. Dann wuerdeen die folgenden Queries einen Teil absetzen, der "... where id IN () " enthaelt.
+				//Die leere Klammer fuehrt aber zu einem Fehler in SQL, da mindestens ein Argutment erwartet wird. Deshalb muss im Falle einer leeren $listrooms einfach 0 uebergeben werden (Id 0 existiert nicht)
 				if ($listrooms == ""){
 					$listrooms = 0;
 				}
 				
 				
-				//Selektiere alle IDs der verschiedenen Terminarten während des Zeitraums und erzeuge eine Liste
+				//Selektiere alle IDs der verschiedenen Terminarten waehrend des Zeitraums und erzeuge eine Liste
 				$listappointments = "";		
 				$listappointments .= getAppointmentsWithoutRepetition($start,$ende,$listrooms);
 				if ($debug ==1){echo $listappointments;}
@@ -241,7 +241,7 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				//letztes Komma abschneiden		
 				$listappointments = substr($listappointments, 0, -1);
 				
-				//Selektiere alle Räume, in denen im Zielzeitraum keine Vorlesung ist. --> Raum ist dann frei
+				//Selektiere alle Raeume, in denen im Zielzeitraum keine Vorlesung ist. --> Raum ist dann frei
 				if ($listappointments == "") $listappointments = "''"; //das IN Statement darf nicht leer sein, sonst kommt ein Fehler: Passiert wenn keine Vorlesung stattfindet momentan(Nachts,Abends)
 				
 					$queryexec = "select ID,rav.".DBCOL_RESOURCE_ATTRIBUTE_VALUE." as VALUE from rapla_resource rr right outer join resource_attribute_value rav on 
@@ -269,7 +269,7 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				$stmt->execute();
 				if ($debug == 1) echo "<br><br>".$queryexec;
 				$data = "";
-				//formatiere alle Räume als Liste für die Oberfläche		
+				//formatiere alle Raeume als Liste fuer die Oberflaeche		
 				while($row = $stmt->fetch(PDO::FETCH_BOTH)){
 					$data .="<li><a class='".$class."' href='#roomDetailInfo' data-rel='popup' data-position-to='window' data-transition='fade'  data-room-id='".$row["ID"]."' data-room='".$row["VALUE"]."'>" . $row["VALUE"] . "</a></li>";		
 				}
@@ -280,7 +280,7 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 		    		echo $json;
 					return;
 				}
-				//Die formatierten Daten werden als JSON Objekt an den Client zurückgeliefert				
+				//Die formatierten Daten werden als JSON Objekt an den Client zurueckgeliefert				
 				$json = createJson(array(JSON_ATTRIBUTE_DATA => $data, JSON_ATTRIBUTE_ERROR => null));
 				echo $json;
 				break;
@@ -291,13 +291,13 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				try{
 				//$name muss die ID des Raumes enthalten!
 				if(!is_numeric($name)){
-					$json = createJson(array(JSON_ATTRIBUTE_DATA => null, "error" => "Bei der Raum-Detail Anfrage wurde der Parameter name nicht mit der ID des Raumes übergeben."));
+					$json = createJson(array(JSON_ATTRIBUTE_DATA => null, "error" => "Bei der Raum-Detail Anfrage wurde der Parameter name nicht mit der ID des Raumes uebergeben."));
 		    		echo $json;
 					exit();
 				}
 				
-				//Die Spalte, die mit der Konstante DBCOL_RESOURCE_ATTRIBUTE_VALUE refenziert wird, wird im select statement umbenannt. Dies ist nötig, um sie danach
-				//einheitlich über $row["VALUE"] abfragen zu können. Eine Abfrage über $row[DBCOL_RESOURCE_ATTRIBUTE_VALUE] ist NICHT möglich!
+				//Die Spalte, die mit der Konstante DBCOL_RESOURCE_ATTRIBUTE_VALUE refenziert wird, wird im select statement umbenannt. Dies ist noetig, um sie danach
+				//einheitlich ueber $row["VALUE"] abfragen zu koennen. Eine Abfrage ueber $row[DBCOL_RESOURCE_ATTRIBUTE_VALUE] ist NICHT moeglich!
 				$queryexec = "select ATTRIBUTE_KEY, ra.".DBCOL_RESOURCE_ATTRIBUTE_VALUE." as VALUE from resource_attribute_value ra where resource_id = :name and attribute_key in (".ROOMDETAILS_ATTRIBUTE_LIST.")";
 				$stmt = $dbh->prepare($queryexec);
 				$stmt->bindParam(":name",$name);
@@ -352,8 +352,8 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				//Room ist in Tabelle rapla_resource gespeichert mit TYPE_KEY=resource1
 				//Name des Raums ist in Tabelle resource_attribute_value gespeichert mit id und ATTRIBUTE_KEY = name
 				
-				//Die Spalte, die mit der Konstante DBCOL_RESOURCE_ATTRIBUTE_VALUE refenziert wird, wird im select statement umbenannt. Dies ist nötig, um sie danach
-				//einheitlich über $row["course_name"] abfragen zu können. Eine Abfrage über $row[DBCOL_RESOURCE_ATTRIBUTE_VALUE] ist NICHT möglich!
+				//Die Spalte, die mit der Konstante DBCOL_RESOURCE_ATTRIBUTE_VALUE refenziert wird, wird im select statement umbenannt. Dies ist noetig, um sie danach
+				//einheitlich ueber $row["course_name"] abfragen zu koennen. Eine Abfrage ueber $row[DBCOL_RESOURCE_ATTRIBUTE_VALUE] ist NICHT moeglich!
 				$queryexec = "select *,ra.".DBCOL_RESOURCE_ATTRIBUTE_VALUE." as course_name from rapla_resource rr inner join resource_attribute_value ra on";
 				$queryexec .= " rr.ID = ra.RESOURCE_ID";
 				$queryexec .= " Where rr.TYPE_KEY = '".DBKEY_COURSE."' and ra.ATTRIBUTE_KEY = '".DBKEY_COURSE_NAME."' ";
@@ -391,8 +391,8 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 				//Room ist in Tabelle rapla_resource gespeichert mit TYPE_KEY=resource1
 				//Name des Raums ist in Tabelle resource_attribute_value gespeichert mit id und ATTRIBUTE_KEY = name
 
-				//Die Spalte, die mit der Konstante DBCOL_RESOURCE_ATTRIBUTE_VALUE refenziert wird, wird im select statement umbenannt. Dies ist nötig, um sie danach
-				//einheitlich über $row["room_name"] abfragen zu können. Eine Abfrage über $row[DBCOL_RESOURCE_ATTRIBUTE_VALUE] ist NICHT möglich!
+				//Die Spalte, die mit der Konstante DBCOL_RESOURCE_ATTRIBUTE_VALUE refenziert wird, wird im select statement umbenannt. Dies ist noetig, um sie danach
+				//einheitlich ueber $row["room_name"] abfragen zu koennen. Eine Abfrage ueber $row[DBCOL_RESOURCE_ATTRIBUTE_VALUE] ist NICHT moeglich!
 				$queryexec = "select *, ra.".DBCOL_RESOURCE_ATTRIBUTE_VALUE." as room_name from rapla_resource rr inner join resource_attribute_value ra on";
 				$queryexec .= " rr.ID = ra.RESOURCE_ID";
 				$queryexec .= " Where rr.TYPE_KEY = '".DBKEY_ROOM."' and ra.ATTRIBUTE_KEY = '".DBKEY_ROOM_NAME."'";
@@ -424,8 +424,8 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 			case "professors":
 				$filterProfessors = filterProfessors();
 				try{
-				//Die Spalten, die mit der Konstante DBCOL_RESOURCE_ATTRIBUTE_VALUE refenziert werden, werden im select statement umbenannt. Dies ist nötig, um sie danach
-				//einheitlich über $row["surname"], $row["forename"], row["title"] abfragen zu können.
+				//Die Spalten, die mit der Konstante DBCOL_RESOURCE_ATTRIBUTE_VALUE refenziert werden, werden im select statement umbenannt. Dies ist noetig, um sie danach
+				//einheitlich ueber $row["surname"], $row["forename"], row["title"] abfragen zu koennen.
 				$queryexec = "select *,ra1.".DBCOL_RESOURCE_ATTRIBUTE_VALUE." as surname, ra2.".DBCOL_RESOURCE_ATTRIBUTE_VALUE." as forename, ra3.".DBCOL_RESOURCE_ATTRIBUTE_VALUE."  as title from rapla_resource rr 
 				left outer join resource_attribute_value ra1 on (rr.ID = ra1.RESOURCE_ID and ra1.ATTRIBUTE_KEY = 'surname' ) 
 				left outer join resource_attribute_value ra2 on (rr.ID = ra2.RESOURCE_ID and ra2.ATTRIBUTE_KEY = 'forename' ) 
@@ -504,8 +504,8 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 			$daysOfMonth = cal_days_in_month(CAL_GREGORIAN, date("m",time()), date("Y",time())); //28-31
 			$lecturesPerDay = array_fill(0,$daysOfMonth,0);
 			//!!!!!!!!!!!!!!!!Problem in der Logik:
-			//man weiss zwar dass ein wochentermin in dem monat liegt, aber wie incrementiert man den zähler der tages?
-			//bsp. montag wdh anzahl = 10 also müsste am 1.,2.,3.,4. montag in dem monat müssen als termin angezeigt werden! --> zusatzlogik in der applikation? 
+			//man weiss zwar dass ein wochentermin in dem monat liegt, aber wie incrementiert man den zaehler der tages?
+			//bsp. montag wdh anzahl = 10 also muesste am 1.,2.,3.,4. montag in dem monat muessen als termin angezeigt werden! --> zusatzlogik in der applikation? 
 			
 			//selektiert alle normalen Termine zwischen monats anfang und ende
 			$queryexecute= "SELECT day(appointment_start) as day,count(*) as count FROM 
@@ -524,7 +524,7 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 			$stmt->execute();
 			
 			while($row = $stmt->fetch(PDO::FETCH_BOTH)){
-				//Der 1. Tag des Monats fällt auf das erste Element des Arrays (0)
+				//Der 1. Tag des Monats faellt auf das erste Element des Arrays (0)
 				$lecturesPerDay[($row["day"]-1)] = $row["count"];
 			}
 			$stmt = null;
@@ -570,7 +570,7 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 			$dwref = date("w",$firstDayOfMonth);
 			
 			while($row = $stmt->fetch(PDO::FETCH_BOTH)){
-				//es muss noch berücksichtig werden, dass ein serientermin auch ausnahmen haben kann (danke RAPLA an die Datenhaltung)
+				//es muss noch beruecksichtig werden, dass ein serientermin auch ausnahmen haben kann (danke RAPLA an die Datenhaltung)
 				$queryproof =  " select *, day(EXCEPTION_DATE) as day from appointment_exception where ";
 				$queryproof .= " APPOINTMENT_ID = :id_appointment and unix_timestamp(EXCEPTION_DATE) >= unix_timestamp( DATE_FORMAT( NOW( ) , '%Y-%m-01' ) ) and ";
 				$queryproof .= " unix_timestamp(EXCEPTION_DATE) <= unix_timestamp( LAST_DAY(now() ) ) ";
@@ -600,25 +600,25 @@ public class FreiraumExportPageGenerator extends RaplaComponent implements Rapla
 			 	$dayDistance = abs($dw-$dwref) +( 7*$weeksDifference);;
 			 	
 				while ($repetition-- > 0 && $dayDistance <= $daysOfMonth){
-					//für die Termine, die mehrere Wochen vor dem Appointment_start beginnen, ist der Wert dayDistance negativ!!
-					//Das Array darf dann nur gefüllt werden, wenn der Wert positiv oder 0 ist!
+					//fuer die Termine, die mehrere Wochen vor dem Appointment_start beginnen, ist der Wert dayDistance negativ!!
+					//Das Array darf dann nur gefuellt werden, wenn der Wert positiv oder 0 ist!
 					//UND!!! Wenn es keine Exception an diesem Tag gibt!
 					if ($dayDistance >= 0 && $exceptions == null){
 					$lecturesPerDay[$dayDistance]++;
-					//termin wird eine Woche später wiederholt
+					//termin wird eine Woche spaeter wiederholt
 					$dayDistance = $dayDistance+7;
 					}
 					else if ($exceptions != null){
-						//die tage in dem Array exceptions müssen geprüft werden, ob der aktuelle tage eine ausnahme ist, dann darf nicht inkrementiert werden!
+						//die tage in dem Array exceptions muessen geprueft werden, ob der aktuelle tage eine ausnahme ist, dann darf nicht inkrementiert werden!
 						foreach ($exceptions as $e){
 							//Wert des Tages auf Position im Array umrechnen (1.April -> 0.Element)	
 							$e--;
 							if ($e == $dayDistance){
-								//Die aktuelle Ausnahme ist gefunden! Füge den Wert nicht hinzu, aber addiere trotzdem die 7 Tage, sodass in die nächste Woche gesprungen wird
+								//Die aktuelle Ausnahme ist gefunden! Fuege den Wert nicht hinzu, aber addiere trotzdem die 7 Tage, sodass in die naechste Woche gesprungen wird
 								$dayDistance = $dayDistance+7;
 							}else{
 								$lecturesPerDay[$dayDistance]++;
-								//termin wird eine Woche später wiederholt
+								//termin wird eine Woche spaeter wiederholt
 								$dayDistance = $dayDistance+7;
 							}
 						}

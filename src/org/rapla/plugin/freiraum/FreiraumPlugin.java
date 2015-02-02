@@ -38,7 +38,7 @@ public class FreiraumPlugin
 
     public void provideServices(ClientServiceContainer container, Configuration config) {
         container.addContainerProvidedComponent(RaplaClientExtensionPoints.PLUGIN_OPTION_PANEL_EXTENSION, TerminalOption.class);
-        container.addContainerProvidedComponent( RESOURCE_FILE, I18nBundleImpl.class, I18nBundleImpl.createConfig(RESOURCE_FILE.getId()));
+        container.addResourceFile( RESOURCE_FILE );
     	if ( !config.getAttributeAsBoolean("enabled", ENABLE_BY_DEFAULT) )
         	return;
     	container.addContainerProvidedComponent(AnnotationEditExtension.DYNAMICTYPE_ANNOTATION_EDIT, ImageURLAnnotationEdit.class);

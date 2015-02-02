@@ -8,10 +8,11 @@ import javax.jws.WebService;
 import org.rapla.components.util.ParseDateException;
 import org.rapla.framework.RaplaException;
 import org.rapla.rest.gwtjsonrpc.common.FutureResult;
+import org.rapla.rest.gwtjsonrpc.common.RemoteJsonService;
 import org.rapla.rest.gwtjsonrpc.common.ResultType;
 
 @WebService
-public interface RaplaJsonService extends org.rapla.rest.gwtjsonrpc.common.RemoteJsonService
+public interface RaplaJsonService extends RemoteJsonService
 {
 	/** returns a List of ResourceDescriptor 
 	 * @param resourceType can be "rooms","courses","persons" or the key of a dynamic type specified in rapla can be null
@@ -32,6 +33,7 @@ public interface RaplaJsonService extends org.rapla.rest.gwtjsonrpc.common.Remot
 	 * @param language specify a language for the category or attribute names. Rapla will try to find a translation if it exists (if null default server language will be used)
 	 * @throws RaplaException 
 	 */
+    @ResultType(value=ResourceDetail.class)
 	FutureResult<ResourceDetail> getResource(
 			@WebParam(name="resourceId")String resourceId
 			,@WebParam(name="language") String language
